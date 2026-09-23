@@ -892,24 +892,26 @@ p {
 .modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(42, 28, 16, 0.45);
+  background: rgba(60, 35, 33, 0.45);
+  backdrop-filter: blur(6px);
   z-index: 100;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  animation: fadeIn 0.25s ease;
+  animation: fadeIn 0.3s ease;
 }
 
 .modal-content {
   background: var(--bg-main);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   max-width: 540px;
   width: 100%;
   padding: 32px;
+  box-shadow: var(--shadow-lift);
   position: relative;
-  animation: scaleUp 0.25s ease;
+  animation: scaleUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .modal-icon-success {
@@ -1057,23 +1059,22 @@ p {
 }
 
 .date-pill-btn {
-  background: transparent;
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   color: var(--text-muted);
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 0.8rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.02em;
+  padding: 7px 16px;
+  border-radius: var(--radius-pill);
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   transition: var(--transition);
 }
 
 .date-pill-btn:hover,
 .date-pill-btn.active {
-  border-color: var(--text-main);
-  color: var(--text-main);
+  background: var(--accent-rose);
+  border-color: var(--accent-rose);
+  color: var(--text-on-accent);
 }
 
 .site-footer {

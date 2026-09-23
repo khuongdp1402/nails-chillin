@@ -173,7 +173,7 @@ export const LookbookModal: React.FC<LookbookModalProps> = ({
                           background: 'var(--bg-surface)',
                           color: 'var(--text-dim)',
                           padding: '2px 8px',
-                          borderRadius: '4px',
+                          borderRadius: 'var(--radius-pill)',
                         }}
                       >
                         #{tag}
