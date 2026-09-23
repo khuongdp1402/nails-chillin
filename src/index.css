@@ -417,7 +417,7 @@ p {
     grid-template-columns: 1fr;
   }
   .hero-collage {
-    height: 340px;
+    height: auto;
     margin-top: 24px;
   }
   .collage-card-2,
