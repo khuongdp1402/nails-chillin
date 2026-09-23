@@ -1239,3 +1239,73 @@ p {
     padding: 4px;
   }
 }
+
+.feature-strip {
+  padding: 40px 0;
+}
+
+.feature-strip-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 24px;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+}
+
+.feature-icon-badge {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--bg-surface);
+  color: var(--accent-rose-dark);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  color: var(--text-main);
+}
+
+.feature-desc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+}
+
+.trust-badge-strip {
+  background: var(--accent-rose);
+  padding: 20px 0;
+  margin-top: 40px;
+}
+
+.trust-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.trust-badge-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--text-on-accent);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .feature-strip-grid,
+  .trust-badge-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
