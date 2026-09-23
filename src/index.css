@@ -15,6 +15,14 @@
   --accent-rose: #d98a94;
   --accent-rose-dark: #c06975;
   --accent-gold: #d4a373;
+  --accent-gold-dark: #a67c52;
+
+  /* Legacy token aliases — kept so pre-redesign components still resolve */
+  --accent-emerald: var(--accent-rose-dark);
+  --accent-red: #c0392b;
+  --accent-red-bg: rgba(192, 57, 43, 0.1);
+  --text-gold: var(--accent-gold);
+  --radius-full: var(--radius-pill);
 
   /* Typography colors */
   --text-main: #3c2321;
@@ -78,6 +86,12 @@ h1, h2, h3 {
   color: var(--accent-rose-dark);
 }
 
+.gold-gradient-text,
+.emerald-gradient-text {
+  color: var(--accent-rose-dark);
+  display: inline-block;
+}
+
 p {
   font-weight: 400;
 }
@@ -106,7 +120,7 @@ p {
 }
 
 .btn-primary {
-  background: var(--accent-rose);
+  background: var(--accent-rose-dark);
   color: var(--text-on-accent);
   box-shadow: var(--shadow-card);
 }
@@ -217,9 +231,9 @@ p {
 }
 
 .btn-admin-toggle.active {
-  background: var(--accent-rose);
+  background: var(--accent-rose-dark);
   color: var(--text-on-accent);
-  border-color: var(--accent-rose);
+  border-color: var(--accent-rose-dark);
 }
 
 /* ==========================================================================
@@ -403,8 +417,18 @@ p {
     grid-template-columns: 1fr;
   }
   .hero-collage {
-    height: 320px;
+    height: 340px;
     margin-top: 24px;
+  }
+  .collage-card-2,
+  .collage-card-3 {
+    display: none;
+  }
+  .collage-card-1 {
+    position: static;
+    width: 80%;
+    max-width: 320px;
+    margin: 0 auto;
   }
 }
 
@@ -439,8 +463,8 @@ p {
 .filter-pill:hover,
 .filter-pill.active,
 .filter-pill.active-spa {
-  background: var(--accent-rose);
-  border-color: var(--accent-rose);
+  background: var(--accent-rose-dark);
+  border-color: var(--accent-rose-dark);
   color: var(--text-on-accent);
 }
 
@@ -625,7 +649,7 @@ p {
 
 .chip-headspa {
   background: rgba(212, 163, 115, 0.15);
-  color: var(--accent-gold);
+  color: var(--accent-gold-dark);
   border: 1px solid rgba(212, 163, 115, 0.35);
 }
 
@@ -703,8 +727,8 @@ p {
 }
 
 .step-indicator.active .step-bubble {
-  background: var(--accent-rose);
-  border-color: var(--accent-rose);
+  background: var(--accent-rose-dark);
+  border-color: var(--accent-rose-dark);
   color: var(--text-on-accent);
 }
 
@@ -850,8 +874,8 @@ p {
 }
 
 .slot-btn.selected {
-  background: var(--accent-rose);
-  border-color: var(--accent-rose);
+  background: var(--accent-rose-dark);
+  border-color: var(--accent-rose-dark);
   box-shadow: var(--shadow-card);
 }
 
@@ -1035,7 +1059,7 @@ p {
 
 .badge-free {
   background: rgba(212, 163, 115, 0.15);
-  color: var(--accent-gold);
+  color: var(--accent-gold-dark);
   border: 1px solid rgba(212, 163, 115, 0.3);
 }
 
@@ -1044,7 +1068,7 @@ p {
   padding: 4px 12px;
   border-radius: var(--radius-pill);
   background: rgba(212, 163, 115, 0.15);
-  color: var(--accent-gold);
+  color: var(--accent-gold-dark);
   border: 1px solid rgba(212, 163, 115, 0.4);
   cursor: pointer;
   transition: var(--transition);
@@ -1068,7 +1092,7 @@ p {
 }
 
 .btn-cancel-booking:hover {
-  background: var(--accent-rose);
+  background: var(--accent-rose-dark);
   color: var(--text-on-accent);
 }
 
@@ -1086,8 +1110,8 @@ p {
 
 .date-pill-btn:hover,
 .date-pill-btn.active {
-  background: var(--accent-rose);
-  border-color: var(--accent-rose);
+  background: var(--accent-rose-dark);
+  border-color: var(--accent-rose-dark);
   color: var(--text-on-accent);
 }
 
@@ -1302,7 +1326,7 @@ p {
 }
 
 .trust-badge-strip {
-  background: var(--accent-rose);
+  background: var(--accent-rose-dark);
   padding: 20px 0;
   margin-top: 40px;
 }
