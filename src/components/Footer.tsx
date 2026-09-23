@@ -5,11 +5,12 @@ export const Footer: React.FC = () => {
   return (
     <footer className="site-footer">
       <div className="container">
+        <p className="footer-quote">Good nails, Good mood, Good day! ♡</p>
         <div className="footer-grid">
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
               <div className="brand-icon" style={{ width: '32px', height: '32px', fontSize: '16px' }}>
-                <Sparkles size={16} color="var(--bg-main)" />
+                <Sparkles size={16} color="var(--text-on-accent)" />
               </div>
               <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-main)' }}>
                 AURA NAILS & BEAUTY

@@ -17,7 +17,7 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="container header-inner">
         <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); onToggleView(false); }}>
           <div className="brand-icon">
-            <Sparkles size={22} color="var(--bg-main)" />
+            <Sparkles size={22} color="var(--text-on-accent)" />
           </div>
           <div>
             <div className="brand-name">AURA NAILS</div>
