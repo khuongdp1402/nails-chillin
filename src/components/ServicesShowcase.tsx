@@ -76,13 +76,7 @@ export const ServicesShowcase: React.FC<ServicesShowcaseProps> = ({
         </div>
 
         {/* Services Grid with Visual Photography */}
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
-            gap: '20px',
-          }}
-        >
+        <div className="services-masonry">
           {filteredServices.map((service) => (
             <div key={service.id} className="service-card-v2">
               <div className="service-card-img-wrap">
