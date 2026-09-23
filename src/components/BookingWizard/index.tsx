@@ -72,7 +72,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   useEffect(() => {
     if (preselectedServiceId && !selectedServiceIds.includes(preselectedServiceId)) {
       setSelectedServiceIds((prev) => [...prev, preselectedServiceId]);
-      setCurrentStep(2);
     }
   }, [preselectedServiceId]);
 
@@ -117,10 +116,23 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     });
   };
 
-  const handleProceedToStep2 = (e: React.FormEvent) => {
-    e.preventDefault();
-    const errors: { [key: string]: string } = {};
+  const handleProceedToStep2 = () => {
+    if (selectedServiceIds.length === 0) {
+      alert('Vui lòng chọn ít nhất 1 dịch vụ để tiếp tục!');
+      return;
+    }
+    setConcurrencyAlert(null);
+    setCurrentStep(2);
+  };
 
+  const calculatedEndTime = useMemo(() => {
+    if (!selectedStartTime || totalDurationMinutes <= 0) return null;
+    const startMin = timeToMinutes(selectedStartTime);
+    return minutesToTime(startMin + totalDurationMinutes);
+  }, [selectedStartTime, totalDurationMinutes]);
+
+  const handleConfirmBooking = () => {
+    const errors: { [key: string]: string } = {};
     if (!customerName.trim()) {
       errors.customerName = 'Vui lòng nhập họ và tên của bạn';
     }
@@ -132,45 +144,23 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     if (!date) {
       errors.date = 'Vui lòng chọn ngày làm đẹp';
     }
+    if (!selectedStartTime || !calculatedEndTime) {
+      errors.slot = 'Vui lòng chọn một khung giờ hợp lệ';
+    }
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
       return;
     }
-
     setFormErrors({});
-    setCurrentStep(2);
-  };
-
-  const handleProceedToStep3 = () => {
-    if (selectedServiceIds.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 dịch vụ để tiếp tục!');
-      return;
-    }
-    setConcurrencyAlert(null);
-    setCurrentStep(3);
-  };
-
-  const calculatedEndTime = useMemo(() => {
-    if (!selectedStartTime || totalDurationMinutes <= 0) return null;
-    const startMin = timeToMinutes(selectedStartTime);
-    return minutesToTime(startMin + totalDurationMinutes);
-  }, [selectedStartTime, totalDurationMinutes]);
-
-  const handleConfirmBooking = () => {
-    if (!selectedStartTime || !calculatedEndTime) {
-      alert('Vui lòng chọn một khung giờ hợp lệ!');
-      return;
-    }
-
     setConcurrencyAlert(null);
 
     const result = attemptCreateBooking({
       customerName: customerName.trim(),
       phone: phone.trim(),
       date,
-      startTime: selectedStartTime,
-      endTime: calculatedEndTime,
+      startTime: selectedStartTime as string,
+      endTime: calculatedEndTime as string,
       serviceIds: selectedServiceIds,
       totalMinutes: totalDurationMinutes,
       totalPrice,
@@ -185,15 +175,14 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
     if (result.booking) {
       setLastCreatedBooking(result.booking);
-      setCurrentStep(4);
+      setCurrentStep(3);
       onBookingSuccess();
-
       try {
         confetti({
           particleCount: 90,
           spread: 80,
           origin: { y: 0.6 },
-          colors: ['#dc5000', '#2a1c10', '#cbb896', '#fbf6ee'],
+          colors: ['#d98a94', '#d4a373', '#fffaf8', '#3c2321'],
         });
       } catch (err) {
         console.log('Confetti effect:', err);
@@ -218,22 +207,17 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       <div className="wizard-steps">
         <div className={`step-indicator ${currentStep === 1 ? 'active' : currentStep > 1 ? 'completed' : ''}`}>
           <div className="step-bubble">{currentStep > 1 ? <Check size={18} /> : '1'}</div>
-          <span className="step-title">Thông tin & Ngày</span>
+          <span className="step-title">Chọn dịch vụ</span>
         </div>
 
         <div className={`step-indicator ${currentStep === 2 ? 'active' : currentStep > 2 ? 'completed' : ''}`}>
           <div className="step-bubble">{currentStep > 2 ? <Check size={18} /> : '2'}</div>
-          <span className="step-title">Chọn dịch vụ</span>
+          <span className="step-title">Thông tin & Giờ hẹn</span>
         </div>
 
-        <div className={`step-indicator ${currentStep === 3 ? 'active' : currentStep > 3 ? 'completed' : ''}`}>
-          <div className="step-bubble">{currentStep > 3 ? <Check size={18} /> : '3'}</div>
-          <span className="step-title">Chọn khung giờ</span>
-        </div>
-
-        <div className={`step-indicator ${currentStep === 4 ? 'active' : ''}`}>
-          <div className="step-bubble">4</div>
-          <span className="step-title">Hoàn tất & Lịch</span>
+        <div className={`step-indicator ${currentStep === 3 ? 'active' : ''}`}>
+          <div className="step-bubble">3</div>
+          <span className="step-title">Hoàn tất</span>
         </div>
       </div>
 
@@ -260,107 +244,13 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         </div>
       )}
 
-      {/* BƯỚC 1: THÔNG TIN KHÁCH & NGÀY */}
+      {/* BƯỚC 1: CHỌN DỊCH VỤ VỚI 2 MODULE NAIL & GỘI ĐẦU */}
       {currentStep === 1 && (
-        <form onSubmit={handleProceedToStep2}>
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>
-              Bước 1: Thông Tin Khách Hàng & Ngày Hẹn
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Vui lòng cung cấp số điện thoại chính xác để hệ thống gửi tin nhắn nhắc hẹn và tự động thêm vào lịch cá nhân của bạn.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="customer-name">
-                <User size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                Họ và tên của bạn:
-              </label>
-              <input
-                id="customer-name"
-                type="text"
-                className="form-input"
-                placeholder="Ví dụ: Nguyễn Thị Mai"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-              {formErrors.customerName && (
-                <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                  {formErrors.customerName}
-                </span>
-              )}
-            </div>
-
-            <div className="form-group">
-              <label className="form-label" htmlFor="customer-phone">
-                <Phone size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                Số điện thoại liên hệ:
-              </label>
-              <input
-                id="customer-phone"
-                type="tel"
-                className="form-input"
-                placeholder="Ví dụ: 0901234567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              {formErrors.phone && (
-                <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                  {formErrors.phone}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="booking-date">
-              <Calendar size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-              Chọn ngày hẹn làm đẹp:
-            </label>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                id="booking-date"
-                type="date"
-                className="form-input"
-                style={{ maxWidth: '240px' }}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                min="2026-01-01"
-              />
-
-              <button
-                type="button"
-                className={`date-pill-btn ${date === '2026-09-25' ? 'active' : ''}`}
-                onClick={() => setDate('2026-09-25')}
-              >
-                ★ Chọn ngày mẫu demo (25/09/2026)
-              </button>
-            </div>
-            {formErrors.date && (
-              <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                {formErrors.date}
-              </span>
-            )}
-          </div>
-
-          <div className="wizard-nav" style={{ justifyContent: 'flex-end' }}>
-            <button type="submit" className="btn btn-primary">
-              <span>Tiếp Tục: Chọn Dịch Vụ</span>
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </form>
-      )}
-
-      {/* BƯỚC 2: CHỌN DỊCH VỤ VỚI 2 MODULE NAIL & GỘI ĐẦU */}
-      {currentStep === 2 && (
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
             <div>
               <h3 style={{ fontSize: '1.4rem', marginBottom: '6px' }}>
-                Bước 2: Chọn Dịch Vụ Nail & Dưỡng Sinh
+                Bước 1: Chọn Dịch Vụ Nail & Dưỡng Sinh
               </h3>
               <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
                 Bạn có thể kết hợp cả làm Nail lẫn Gội đầu dưỡng sinh trong cùng 1 lần đặt. Hệ thống sẽ tự động cộng dồn thời gian.
@@ -498,40 +388,115 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             </div>
           </div>
 
-          <div className="wizard-nav">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setCurrentStep(1)}
-            >
-              <ChevronLeft size={18} />
-              <span>Quay Lại</span>
-            </button>
-
+          <div className="wizard-nav" style={{ justifyContent: 'flex-end' }}>
             <button
               type="button"
               className="btn btn-primary"
-              onClick={handleProceedToStep3}
+              onClick={handleProceedToStep2}
               disabled={selectedServiceIds.length === 0}
             >
-              <span>Tiếp Tục: Chọn Giờ ({formatDuration(totalDurationMinutes)})</span>
+              <span>Tiếp Tục: Thông Tin & Giờ Hẹn ({formatDuration(totalDurationMinutes)})</span>
               <ChevronRight size={18} />
             </button>
           </div>
         </div>
       )}
 
-      {/* BƯỚC 3: CHỌN KHUNG GIỜ THÔNG MINH */}
-      {currentStep === 3 && (
+      {/* BƯỚC 2: THÔNG TIN KHÁCH, NGÀY HẸN & CHỌN KHUNG GIỜ */}
+      {currentStep === 2 && (
         <div>
-          <div style={{ marginBottom: '20px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>
-              Bước 3: Chọn Khung Giờ Bắt Đầu
+              Bước 2: Thông Tin Khách Hàng & Khung Giờ Hẹn
             </h3>
+            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
+              Vui lòng cung cấp số điện thoại chính xác để hệ thống gửi tin nhắn nhắc hẹn và tự động thêm vào lịch cá nhân của bạn.
+            </p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+            <div className="form-group">
+              <label className="form-label" htmlFor="customer-name">
+                <User size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                Họ và tên của bạn:
+              </label>
+              <input
+                id="customer-name"
+                type="text"
+                className="form-input"
+                placeholder="Ví dụ: Nguyễn Thị Mai"
+                value={customerName}
+                onChange={(e) => setCustomerName(e.target.value)}
+              />
+              {formErrors.customerName && (
+                <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
+                  {formErrors.customerName}
+                </span>
+              )}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label" htmlFor="customer-phone">
+                <Phone size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+                Số điện thoại liên hệ:
+              </label>
+              <input
+                id="customer-phone"
+                type="tel"
+                className="form-input"
+                placeholder="Ví dụ: 0901234567"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+              />
+              {formErrors.phone && (
+                <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
+                  {formErrors.phone}
+                </span>
+              )}
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label className="form-label" htmlFor="booking-date">
+              <Calendar size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
+              Chọn ngày hẹn làm đẹp:
+            </label>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+              <input
+                id="booking-date"
+                type="date"
+                className="form-input"
+                style={{ maxWidth: '240px' }}
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                min="2026-01-01"
+              />
+
+              <button
+                type="button"
+                className={`date-pill-btn ${date === '2026-09-25' ? 'active' : ''}`}
+                onClick={() => setDate('2026-09-25')}
+              >
+                ★ Chọn ngày mẫu demo (25/09/2026)
+              </button>
+            </div>
+            {formErrors.date && (
+              <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
+                {formErrors.date}
+              </span>
+            )}
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
             <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
               Ngày hẹn: <strong style={{ color: 'var(--accent-gold)' }}>{date}</strong>. Tổng thời lượng phục vụ:{' '}
               <strong style={{ color: 'var(--accent-gold)' }}>{formatDuration(totalDurationMinutes)}</strong>.
             </p>
+            {formErrors.slot && (
+              <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
+                {formErrors.slot}
+              </span>
+            )}
           </div>
 
           <div className="slot-notice-box">
@@ -609,16 +574,15 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             <button
               type="button"
               className="btn btn-secondary"
-              onClick={() => setCurrentStep(2)}
+              onClick={() => setCurrentStep(1)}
             >
               <ChevronLeft size={18} />
-              <span>Quay Lại Chọn Dịch Vụ</span>
+              <span>Quay Lại</span>
             </button>
 
             <button
               type="button"
               className="btn btn-primary"
-              disabled={!selectedStartTime}
               onClick={handleConfirmBooking}
             >
               <CheckCircle size={18} />
@@ -628,8 +592,8 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         </div>
       )}
 
-      {/* BƯỚC 4: THÀNH CÔNG VỚI TÍCH HỢP GOOGLE CALENDAR & FILE .ICS */}
-      {currentStep === 4 && lastCreatedBooking && (
+      {/* BƯỚC 3: THÀNH CÔNG VỚI TÍCH HỢP GOOGLE CALENDAR & FILE .ICS */}
+      {currentStep === 3 && lastCreatedBooking && (
         <div style={{ textAlign: 'center', padding: '20px 0' }}>
           <div className="modal-icon-success">
             <Sparkles size={36} color="var(--accent-emerald)" />

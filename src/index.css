@@ -668,9 +668,8 @@ p {
   top: 50%;
   left: 30px;
   right: 30px;
-  height: 1px;
-  background-image: linear-gradient(to right, var(--border-subtle) 50%, transparent 50%);
-  background-size: 8px 1px;
+  height: 2px;
+  background: var(--border-subtle);
   transform: translateY(-50%);
   z-index: 1;
 }
@@ -688,8 +687,8 @@ p {
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: var(--bg-main);
-  border: 1px solid var(--border-subtle);
+  background: var(--bg-card);
+  border: 2px solid var(--border-subtle);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -700,28 +699,26 @@ p {
 }
 
 .step-indicator.active .step-bubble {
-  background: var(--text-main);
-  border-color: var(--text-main);
-  color: var(--bg-main);
+  background: var(--accent-rose);
+  border-color: var(--accent-rose);
+  color: var(--text-on-accent);
 }
 
 .step-indicator.completed .step-bubble {
   background: var(--bg-surface);
-  border-color: var(--text-main);
-  color: var(--text-main);
+  border-color: var(--accent-rose);
+  color: var(--accent-rose-dark);
 }
 
 .step-title {
-  font-size: 0.78rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  font-size: 0.82rem;
+  font-weight: 600;
   color: var(--text-dim);
   text-align: center;
 }
 
 .step-indicator.active .step-title {
-  color: var(--text-main);
+  color: var(--accent-rose-dark);
 }
 
 /* Form Controls */
@@ -741,20 +738,20 @@ p {
 
 .form-input {
   width: 100%;
-  background: var(--bg-main);
-  border: none;
-  border-bottom: 1px solid var(--text-main);
-  border-radius: var(--radius-input);
-  padding: 10px 2px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
   color: var(--text-main);
   font-size: 0.95rem;
-  font-family: var(--font-sans);
+  font-family: var(--font-body);
   outline: none;
   transition: var(--transition);
 }
 
 .form-input:focus {
-  border-bottom-color: var(--accent-red);
+  border-color: var(--accent-rose);
+  box-shadow: 0 0 0 3px rgba(217, 138, 148, 0.18);
 }
 
 /* Summary Bar */
@@ -805,7 +802,7 @@ p {
 }
 
 .slot-btn {
-  background: var(--bg-main);
+  background: var(--bg-card);
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 12px 8px;
@@ -820,48 +817,58 @@ p {
 }
 
 .slot-time {
-  font-size: 1.02rem;
+  font-size: 1.05rem;
   font-weight: 700;
   color: var(--text-main);
 }
 
 .slot-end {
-  font-size: 0.72rem;
+  font-size: 0.74rem;
   color: var(--text-dim);
 }
 
 .slot-status-tag {
-  font-size: 0.66rem;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-size: 0.68rem;
+  font-weight: 600;
   padding: 2px 6px;
-  border-radius: var(--radius-full);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
+  border-radius: var(--radius-pill);
 }
 
 .slot-btn.available:hover {
-  border-color: var(--text-main);
+  background: var(--bg-surface);
+  border-color: var(--accent-rose);
+  transform: scale(1.03);
+}
+
+.slot-btn.available .slot-status-tag {
+  background: var(--bg-surface);
+  color: var(--accent-rose-dark);
 }
 
 .slot-btn.selected {
-  background: var(--text-main);
-  border-color: var(--text-main);
+  background: var(--accent-rose);
+  border-color: var(--accent-rose);
+  box-shadow: var(--shadow-card);
 }
 
 .slot-btn.selected .slot-time,
 .slot-btn.selected .slot-end,
 .slot-btn.selected .slot-status-tag {
-  color: var(--bg-main) !important;
-  border-color: var(--bg-main) !important;
+  color: var(--text-on-accent) !important;
   font-weight: 700;
 }
 
 .slot-btn.disabled {
   opacity: 0.45;
-  background: var(--bg-surface);
-  border-style: dashed;
+  background: var(--bg-main);
+  border-color: var(--border-subtle);
   cursor: not-allowed;
+  filter: grayscale(0.4);
+}
+
+.slot-btn.disabled .slot-status-tag {
+  background: rgba(217, 138, 148, 0.12);
+  color: var(--accent-rose-dark);
 }
 
 .slot-btn.disabled:hover::after {
@@ -871,8 +878,8 @@ p {
   left: 50%;
   transform: translateX(-50%);
   background: var(--text-main);
-  color: var(--bg-main);
-  font-size: 0.72rem;
+  color: var(--text-on-accent);
+  font-size: 0.74rem;
   padding: 6px 10px;
   border-radius: var(--radius-sm);
   white-space: nowrap;
