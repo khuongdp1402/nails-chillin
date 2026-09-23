@@ -539,25 +539,24 @@ p {
   border-radius: var(--radius-full);
 }
 
-/* Calendar View Styles (Admin) */
 .calendar-view-panel {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   padding: 24px;
   margin-top: 20px;
+  box-shadow: var(--shadow-card);
 }
 
 .calendar-grid-header {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   text-align: center;
-  font-weight: 500;
-  text-transform: uppercase;
-  font-size: 0.8rem;
-  color: var(--text-main);
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--accent-rose-dark);
   padding-bottom: 12px;
-  border-bottom: 1px dashed var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
   margin-bottom: 12px;
 }
 
@@ -580,17 +579,18 @@ p {
 }
 
 .calendar-day-cell:hover {
-  border-color: var(--text-main);
+  background: var(--bg-surface);
+  border-color: var(--accent-rose);
 }
 
 .calendar-day-cell.selected {
-  border-color: var(--text-main);
+  border-color: var(--accent-rose);
+  box-shadow: var(--shadow-card);
   background: var(--bg-surface);
 }
 
 .calendar-day-cell.today {
-  border-style: dashed;
-  border-color: var(--text-main);
+  border-color: var(--accent-gold);
 }
 
 .day-number {
@@ -608,41 +608,45 @@ p {
 }
 
 .calendar-event-chip {
-  font-size: 0.68rem;
+  font-size: 0.7rem;
   padding: 2px 6px;
   border-radius: 4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-weight: 500;
+  font-weight: 600;
 }
 
-.chip-nail,
-.chip-headspa {
+.chip-nail {
   background: var(--bg-surface);
-  color: var(--text-main);
+  color: var(--accent-rose-dark);
   border: 1px solid var(--border-subtle);
 }
 
-/* Reminder Hub Styles */
+.chip-headspa {
+  background: rgba(212, 163, 115, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(212, 163, 115, 0.35);
+}
+
 .reminder-hub-card {
   background: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   padding: 20px;
   margin-bottom: 24px;
 }
 
 .reminder-alert-banner {
-  background: var(--accent-red-bg);
-  border: 1px dashed var(--accent-red);
+  background: rgba(217, 138, 148, 0.1);
+  border: 1px solid var(--accent-rose);
   border-radius: var(--radius-sm);
   padding: 12px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 16px;
-  color: var(--text-main);
+  color: var(--accent-rose-dark);
 }
 
 /* Glass Panels & Wizard */
@@ -968,26 +972,25 @@ p {
   text-align: right;
 }
 
-/* Timeline Table (Owner) */
 .timeline-table-container {
   overflow-x: auto;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-card);
   border: 1px solid var(--border-subtle);
 }
 
 .schedule-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.9rem;
+  font-size: 0.92rem;
   text-align: left;
 }
 
 .schedule-table th {
   background: var(--bg-surface);
-  color: var(--text-main);
+  color: var(--accent-rose-dark);
   padding: 14px 18px;
-  font-weight: 500;
-  font-size: 0.78rem;
+  font-weight: 700;
+  font-size: 0.82rem;
   text-transform: uppercase;
   letter-spacing: 0.06em;
   border-bottom: 1px solid var(--border-subtle);
@@ -995,17 +998,23 @@ p {
 
 .schedule-table td {
   padding: 14px 18px;
-  border-bottom: 1px dashed var(--border-subtle);
+  border-bottom: 1px solid var(--border-subtle);
 }
 
-.row-booked,
+.row-booked {
+  background: rgba(217, 138, 148, 0.04);
+}
+
+.row-booked:hover {
+  background: rgba(217, 138, 148, 0.08);
+}
+
 .row-free {
-  background: transparent;
+  background: rgba(212, 163, 115, 0.03);
 }
 
-.row-booked:hover,
 .row-free:hover {
-  background: var(--bg-surface);
+  background: rgba(212, 163, 115, 0.07);
 }
 
 .badge-status {
@@ -1013,56 +1022,54 @@ p {
   align-items: center;
   gap: 6px;
   padding: 4px 12px;
-  border-radius: var(--radius-full);
-  font-size: 0.74rem;
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-main);
+  border-radius: var(--radius-pill);
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
-.badge-booked,
+.badge-booked {
+  background: rgba(217, 138, 148, 0.15);
+  color: var(--accent-rose-dark);
+  border: 1px solid rgba(217, 138, 148, 0.3);
+}
+
 .badge-free {
-  background: transparent;
-  border: 1px solid var(--border-subtle);
-  color: var(--text-main);
+  background: rgba(212, 163, 115, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(212, 163, 115, 0.3);
 }
 
 .btn-quick-add {
-  font-size: 0.76rem;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-size: 0.78rem;
   padding: 4px 12px;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--text-main);
-  border: 1px solid var(--text-main);
+  border-radius: var(--radius-pill);
+  background: rgba(212, 163, 115, 0.15);
+  color: var(--accent-gold);
+  border: 1px solid rgba(212, 163, 115, 0.4);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .btn-quick-add:hover {
-  background: var(--text-main);
-  color: var(--bg-main);
+  background: var(--accent-gold);
+  color: var(--text-on-accent);
+  font-weight: 700;
 }
 
 .btn-cancel-booking {
-  font-size: 0.76rem;
-  font-weight: 500;
-  text-transform: uppercase;
+  font-size: 0.78rem;
   padding: 4px 12px;
-  border-radius: var(--radius-full);
-  background: transparent;
-  color: var(--accent-red);
-  border: 1px solid var(--accent-red);
+  border-radius: var(--radius-pill);
+  background: rgba(217, 138, 148, 0.12);
+  color: var(--accent-rose-dark);
+  border: 1px solid rgba(217, 138, 148, 0.3);
   cursor: pointer;
   transition: var(--transition);
 }
 
 .btn-cancel-booking:hover {
-  background: var(--accent-red);
-  color: var(--bg-main);
+  background: var(--accent-rose);
+  color: var(--text-on-accent);
 }
 
 .date-pill-btn {
