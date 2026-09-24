@@ -37,7 +37,7 @@
 .svc-badge {
   position: absolute; top: 8px; left: 8px; max-width: calc(100% - 16px);
   padding: 3px 10px; border-radius: var(--radius-pill);
-  background: var(--gradient-cta); color: var(--text-on-accent);
+  background: var(--accent-rose-dark); color: var(--text-on-accent);
   font-size: 0.7rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   box-shadow: var(--shadow-soft);
 }

@@ -165,7 +165,7 @@ export const SALON_HOURS = {
 };
 
 // Quản lý Dịch vụ trong LocalStorage (cho phép Chủ tiệm CRUD trực tiếp)
-const SERVICES_STORAGE_KEY = 'aura_salon_services_v3';
+export const SERVICES_STORAGE_KEY = 'aura_salon_services_v3';
 
 export function getStoredServices(): Service[] {
   try {

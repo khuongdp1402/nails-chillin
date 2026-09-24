@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Booking, Service, ServiceCategory } from './types';
-import { getStoredServices } from './data/services';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import type { Booking, Service } from './types';
+import { getStoredServices, SERVICES_STORAGE_KEY } from './data/services';
 import { getStoredBookings, subscribeToBookingUpdates } from './utils/storage';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
@@ -28,8 +28,7 @@ export function App() {
   const [services, setServices] = useState<Service[]>(() => getStoredServices());
   const [bookings, setBookings] = useState<Booking[]>(() => getStoredBookings());
   const [targetDate] = useState<string>(() => todayLocalISO());
-  const [preselectedServiceId, setPreselectedServiceId] = useState<string | undefined>(undefined);
-  const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<ServiceCategory | 'all'>('all');
+  const [preselect, setPreselect] = useState<{ id: string; nonce: number } | undefined>(undefined);
   const [pickerReopened, setPickerReopened] = useState<boolean>(false);
 
   // Lookbook modal state
@@ -40,6 +39,25 @@ export function App() {
     const onHash = () => setIsAdminView(isAdminHash());
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  // Đổi giữa trang chủ và trang quản lý thì cuộn về đầu trang
+  const firstView = useRef(true);
+  useEffect(() => {
+    if (firstView.current) {
+      firstView.current = false;
+      return;
+    }
+    window.scrollTo({ top: 0 });
+  }, [isAdminView]);
+
+  // Dịch vụ đổi ở tab khác (trang quản lý) thì làm mới danh sách
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === SERVICES_STORAGE_KEY) setServices(getStoredServices());
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
   }, []);
 
   const goHome = () => {
@@ -72,22 +90,18 @@ export function App() {
   };
 
   // Chọn từ Showcase
+  const preselectNonce = useRef(0);
   const handleSelectServiceFromShowcase = (serviceId: string) => {
-    setPreselectedServiceId(serviceId);
+    preselectNonce.current += 1;
+    setPreselect({ id: serviceId, nonce: preselectNonce.current });
     handleScrollToBooking();
   };
 
   // Chọn mẫu từ Lookbook
-  const handleSelectFromLookbook = (serviceId: string) => {
-    setPreselectedServiceId(serviceId);
-    handleScrollToBooking();
-  };
+  const handleSelectFromLookbook = handleSelectServiceFromShowcase;
 
-  // Lọc category từ Hero
-  const handleSelectCategoryFromHero = (cat: 'nail' | 'headspa') => {
-    setSelectedCategoryFilter(cat);
-    scrollToTarget(document.getElementById('services-section'));
-  };
+  const closePicker = useCallback(() => setPickerReopened(false), []);
+  const closeLookbook = useCallback(() => setIsLookbookOpen(false), []);
 
   return (
     <div className="app-layout">
@@ -113,7 +127,6 @@ export function App() {
           <Hero
             onStartBooking={handleScrollToBooking}
             onOpenLookbook={() => setIsLookbookOpen(true)}
-            onSelectCategory={handleSelectCategoryFromHero}
           />
 
           <FeatureStrip />
@@ -121,7 +134,6 @@ export function App() {
           <div id="services-section">
             <ServicesShowcase
               services={services}
-              selectedCategoryFilter={selectedCategoryFilter}
               onSelectService={handleSelectServiceFromShowcase}
               onOpenLookbook={() => setIsLookbookOpen(true)}
             />
@@ -144,7 +156,7 @@ export function App() {
                 allBookings={bookings}
                 onBookingSuccess={refreshBookings}
                 targetDate={targetDate}
-                preselectedServiceId={preselectedServiceId}
+                preselect={preselect}
                 onOpenLookbook={() => setIsLookbookOpen(true)}
               />
             </div>
@@ -156,7 +168,7 @@ export function App() {
 
       <LookbookModal
         isOpen={isLookbookOpen}
-        onClose={() => setIsLookbookOpen(false)}
+        onClose={closeLookbook}
         onSelectLookbookService={handleSelectFromLookbook}
       />
 
@@ -164,7 +176,7 @@ export function App() {
 
       {!isAdminView && (
         <>
-          <ModePicker reopened={pickerReopened} onClose={() => setPickerReopened(false)} />
+          <ModePicker reopened={pickerReopened} onClose={closePicker} />
           <ZaloFab />
         </>
       )}

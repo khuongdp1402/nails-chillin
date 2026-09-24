@@ -1,5 +1,9 @@
 import '../styles/hero.css';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { getStoredServices } from '../data/services';
+import { getMinHints, formatPrice } from '../utils/servicesSummary';
+import type { PriceHint } from '../utils/servicesSummary';
+import { formatDuration } from '../utils/scheduler';
 import { Calendar, Clock, Images, MapPin, MessageCircle, Sparkles } from 'lucide-react';
 import { useMode } from '../context/ModeContext';
 import type { ServiceMode } from '../context/ModeContext';
@@ -9,27 +13,23 @@ import { useReveal } from '../hooks/useReveal';
 interface HeroProps {
   onStartBooking: () => void;
   onOpenLookbook: () => void;
-  onSelectCategory: (cat: 'nail' | 'headspa') => void;
 }
 
-const COLLAGE_PHOTOS: { src: string; alt: string; className: string; category: 'nail' | 'headspa' }[] = [
+const COLLAGE_PHOTOS: { src: string; alt: string; className: string }[] = [
   {
     src: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80',
     alt: 'Bộ nail sơn gel nghệ thuật',
     className: 'hx-photo hx-photo-1',
-    category: 'nail',
   },
   {
     src: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80',
     alt: 'Bộ nail đính đá',
     className: 'hx-photo hx-photo-2',
-    category: 'nail',
   },
   {
     src: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80',
     alt: 'Gội đầu dưỡng sinh thư giãn',
     className: 'hx-photo hx-photo-3',
-    category: 'headspa',
   },
 ];
 
@@ -40,34 +40,39 @@ interface HeroCopy {
   eyebrow: string;
 }
 
-const COPY: Record<ServiceMode, HeroCopy> = {
-  nail: {
-    words: ['Đôi', 'tay', 'xinh,'],
-    script: 'tâm trạng vui',
-    desc: 'Làm nail từ 150.000đ, khoảng 45–90 phút. Sơn gel bền 3–4 tuần, dụng cụ tiệt trùng cho từng khách.',
-    eyebrow: 'Làm nail',
-  },
-  headspa: {
-    words: ['Gội', 'đầu', 'dưỡng', 'sinh,'],
-    script: 'nhẹ người ngay',
-    desc: 'Gội đầu dưỡng sinh khoảng 60–90 phút, có massage cổ vai gáy. Giá từ 200.000đ, bạn chỉ việc nằm thư giãn.',
-    eyebrow: 'Gội đầu dưỡng sinh',
-  },
-  both: {
-    words: ['Làm', 'nail', 'và', 'gội', 'đầu,'],
-    script: 'một buổi trọn vẹn',
-    desc: 'Nail từ 150.000đ, gội đầu dưỡng sinh từ 200.000đ. Đặt cả hai trong một lần, bạn ghé một chuyến là xong.',
-    eyebrow: 'Nail & Gội đầu dưỡng sinh',
-  },
-};
+const priceText = (h: PriceHint | null): string =>
+  h ? ` Giá từ ${formatPrice(h.price)}, khoảng ${formatDuration(h.minutes)}.` : '';
+
+function buildCopy(hints: ReturnType<typeof getMinHints>): Record<ServiceMode, HeroCopy> {
+  return {
+    nail: {
+      words: ['Đôi', 'tay', 'xinh,'],
+      script: 'tâm trạng vui',
+      desc: `Sơn gel bền 3–4 tuần, dụng cụ tiệt trùng cho từng khách.${priceText(hints.nail)}`,
+      eyebrow: 'Làm nail',
+    },
+    headspa: {
+      words: ['Gội', 'đầu', 'dưỡng', 'sinh,'],
+      script: 'nhẹ người ngay',
+      desc: `Gội đầu dưỡng sinh có massage cổ vai gáy, bạn chỉ việc nằm thư giãn.${priceText(hints.headspa)}`,
+      eyebrow: 'Gội đầu dưỡng sinh',
+    },
+    both: {
+      words: ['Làm', 'nail', 'và', 'gội', 'đầu,'],
+      script: 'một buổi trọn vẹn',
+      desc: `Đặt cả hai trong một lần, bạn ghé một chuyến là xong.${priceText(hints.both)}`,
+      eyebrow: 'Nail & Gội đầu dưỡng sinh',
+    },
+  };
+}
 
 export const Hero: React.FC<HeroProps> = ({
   onStartBooking,
   onOpenLookbook,
-  onSelectCategory,
 }) => {
   const { mode } = useMode();
-  const copy = COPY[mode ?? 'both'];
+  const hints = useMemo(() => getMinHints(getStoredServices()), []);
+  const copy = buildCopy(hints)[mode ?? 'both'];
   const collageRef = useRef<HTMLDivElement>(null);
   const infoRef = useReveal<HTMLDivElement>(200);
   const collageWrapRef = useReveal<HTMLDivElement>(120);
@@ -163,7 +168,8 @@ export const Hero: React.FC<HeroProps> = ({
                 key={photo.className}
                 type="button"
                 className={photo.className}
-                onClick={() => onSelectCategory(photo.category)}
+                onClick={onOpenLookbook}
+                aria-label={`Xem mẫu: ${photo.alt}`}
               >
                 <img src={photo.src} alt={photo.alt} loading="lazy" />
               </button>

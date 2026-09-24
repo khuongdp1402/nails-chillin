@@ -31,15 +31,21 @@ export function getStoredBookings(): Booking[] {
 /**
  * Lưu danh sách bookings vào localStorage và phát sự kiện broadcast
  */
-export function saveBookings(bookings: Booking[]): void {
+export function saveBookings(bookings: Booking[]): boolean {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(bookings));
+  } catch (e) {
+    console.error('Lỗi khi lưu bookings vào localStorage:', e);
+    return false;
+  }
+  try {
     if (channel) {
       channel.postMessage({ type: 'BOOKINGS_UPDATED', timestamp: Date.now() });
     }
   } catch (e) {
-    console.error('Lỗi khi lưu bookings vào localStorage:', e);
+    console.warn('Không phát được sự kiện đồng bộ:', e);
   }
+  return true;
 }
 
 /**
@@ -89,7 +95,12 @@ export function attemptCreateBooking(
   };
 
   const updatedBookings = [...currentBookings, newBooking];
-  saveBookings(updatedBookings);
+  if (!saveBookings(updatedBookings)) {
+    return {
+      success: false,
+      error: 'Không lưu được lịch, bộ nhớ trình duyệt đã đầy. Bạn nhắn Zalo cho tiệm để đặt giúp nhé.',
+    };
+  }
 
   return {
     success: true,
@@ -105,8 +116,7 @@ export function cancelBooking(bookingId: string): boolean {
   const updatedBookings = currentBookings.map((b) =>
     b.id === bookingId ? { ...b, status: 'cancelled' as const } : b
   );
-  saveBookings(updatedBookings);
-  return true;
+  return saveBookings(updatedBookings);
 }
 
 /**

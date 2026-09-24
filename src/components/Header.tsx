@@ -12,6 +12,7 @@ interface HeaderProps {
 }
 
 const MODE_LABEL = { nail: 'Nail', headspa: 'Gội đầu', both: 'Nail + Gội đầu' } as const;
+const MODE_SHORT = { nail: 'Nail', headspa: 'Gội đầu', both: 'Cả hai' } as const;
 
 export const Header: React.FC<HeaderProps> = ({ onScrollToBooking, onGoHome, onOpenModePicker, isAdminView }) => {
   const { mode } = useMode();
@@ -37,12 +38,13 @@ export const Header: React.FC<HeaderProps> = ({ onScrollToBooking, onGoHome, onO
               aria-haspopup="dialog"
               aria-label={`Đang xem: ${mode ? MODE_LABEL[mode] : 'chưa chọn'}. Bấm để đổi`}
             >
-              <span>{mode ? MODE_LABEL[mode] : 'Chọn dịch vụ'}</span>
+              <span className="ch-chip-full">{mode ? MODE_LABEL[mode] : 'Chọn dịch vụ'}</span>
+              <span className="ch-chip-short" aria-hidden="true">{mode ? MODE_SHORT[mode] : 'Chọn'}</span>
               <ChevronDown size={16} />
             </button>
-            <button type="button" className="btn btn-primary ch-cta" onClick={onScrollToBooking}>
+            <button type="button" className="btn btn-primary ch-cta" onClick={onScrollToBooking} aria-label="Đặt lịch">
               <CalendarDays size={18} />
-              <span>Đặt lịch</span>
+              <span className="ch-cta-text">Đặt lịch</span>
             </button>
           </div>
         )}

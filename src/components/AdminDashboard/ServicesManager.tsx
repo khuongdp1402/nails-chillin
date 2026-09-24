@@ -215,6 +215,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
                   <Plus size={16} aria-hidden="true" />
                 </button>
               </div>
+              <p className="sm-hint">Sẽ áp dụng khi tiệm có thêm thợ.</p>
             </div>
             <div className="sm-field">
               <label htmlFor="sm-badge">Nhãn nổi bật</label>

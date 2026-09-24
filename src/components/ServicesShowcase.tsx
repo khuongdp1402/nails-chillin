@@ -1,6 +1,6 @@
 import React from 'react';
 import '../styles/services.css';
-import type { Service, ServiceCategory } from '../types';
+import type { Service } from '../types';
 import { formatDuration } from '../utils/scheduler';
 import { useMode } from '../context/ModeContext';
 import { useReveal } from '../hooks/useReveal';
@@ -8,7 +8,6 @@ import { Clock } from 'lucide-react';
 
 interface ServicesShowcaseProps {
   services: Service[];
-  selectedCategoryFilter?: ServiceCategory | 'all';
   onSelectService: (serviceId: string) => void;
   onOpenLookbook: () => void;
 }
@@ -57,7 +56,6 @@ const Heading: React.FC = () => {
 
 export const ServicesShowcase: React.FC<ServicesShowcaseProps> = ({
   services,
-  selectedCategoryFilter = 'all',
   onSelectService,
   onOpenLookbook,
 }) => {
@@ -65,10 +63,7 @@ export const ServicesShowcase: React.FC<ServicesShowcaseProps> = ({
   const moreRef = useReveal<HTMLDivElement>();
 
   const visible = services.filter(
-    (s) =>
-      showsCategory(s.category) &&
-      s.showOnLanding !== false &&
-      (selectedCategoryFilter === 'all' || s.category === selectedCategoryFilter),
+    (s) => showsCategory(s.category) && s.showOnLanding !== false,
   );
 
   const renderGrid = (list: Service[], label?: string) => (

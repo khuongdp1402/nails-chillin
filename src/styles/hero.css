@@ -66,7 +66,7 @@
   gap: 8px;
   padding: 6px 14px;
   border-radius: var(--radius-pill);
-  background: var(--gradient-cta);
+  background: var(--accent-rose-dark);
   color: var(--text-on-accent);
   font-size: 0.8rem;
   font-weight: 600;

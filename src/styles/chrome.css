@@ -61,6 +61,14 @@
   .ch-header .brand-name { font-size: 1.25rem; }
   .ch-header .header-actions { gap: 12px; }
 }
+.ch-chip-short { display: none; }
+@media (max-width: 420px) {
+  .ch-chip { padding: 0 10px; }
+  .ch-chip-full { display: none; }
+  .ch-chip-short { display: inline; }
+  .ch-cta { padding: 0; width: 44px; justify-content: center; }
+  .ch-cta-text { display: none; }
+}
 @media (max-width: 380px) {
   .ch-header .brand-name { display: none; }
 }
@@ -199,9 +207,7 @@
   right: 16px;
   bottom: calc(16px + env(safe-area-inset-bottom));
   z-index: 60;
-  display: flex;
-  align-items: center;
-  gap: 10px;
+  display: block;
   text-decoration: none;
 }
 .ch-zalo-btn {
@@ -228,7 +234,9 @@
 }
 .ch-zalo:focus-visible { outline: none; }
 .ch-zalo-tip {
-  order: -1;
+  position: absolute;
+  right: calc(100% + 10px);
+  top: 50%;
   padding: 8px 14px;
   border-radius: var(--radius-pill);
   background: var(--bg-card);
@@ -239,12 +247,12 @@
   font-weight: 600;
   white-space: nowrap;
   opacity: 0;
-  transform: translateX(8px);
+  transform: translate(8px, -50%);
   pointer-events: none;
   transition: opacity var(--dur-fast) var(--ease-lux), transform var(--dur-fast) var(--ease-lux);
 }
 .ch-zalo:hover .ch-zalo-tip,
-.ch-zalo:focus-visible .ch-zalo-tip { opacity: 1; transform: none; }
+.ch-zalo:focus-visible .ch-zalo-tip { opacity: 1; transform: translate(0, -50%); }
 @keyframes ch-pulse {
   0% { box-shadow: 0 10px 26px -6px rgba(0, 104, 255, 0.55), 0 0 0 0 rgba(0, 104, 255, 0.4); }
   70%, 100% { box-shadow: 0 10px 26px -6px rgba(0, 104, 255, 0.55), 0 0 0 16px rgba(0, 104, 255, 0); }

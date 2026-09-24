@@ -27,7 +27,7 @@
   /* Typography colors */
   --text-main: #3a1220;
   --text-muted: #7a5560;
-  --text-dim: #a98a93;
+  --text-dim: #8a6a74;
   --text-on-accent: #ffffff;
   --price-color: #c8102e;
 
@@ -259,12 +259,15 @@ p {
   .step-enter {
     animation: none;
   }
-}
 
-.btn-emerald {
-  background: var(--text-main);
-  color: var(--bg-main);
-  font-weight: 500;
+  .btn {
+    transition: none;
+  }
+
+  .btn-primary:hover:not(:disabled),
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 .site-header {
@@ -324,81 +327,6 @@ p {
   gap: 12px;
 }
 
-.btn-admin-toggle {
-  background: var(--bg-card);
-  color: var(--accent-rose-dark);
-  border: 1px solid var(--border-subtle);
-  padding: 9px 18px;
-  font-size: 0.85rem;
-  border-radius: var(--radius-pill);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-admin-toggle:hover {
-  background: var(--bg-surface);
-  border-color: var(--accent-rose);
-}
-
-.btn-admin-toggle.active {
-  background: var(--accent-rose-dark);
-  color: var(--text-on-accent);
-  border-color: var(--accent-rose-dark);
-}
-
-.slot-time {
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--text-main);
-}
-
-.slot-end {
-  font-size: 0.74rem;
-  color: var(--text-dim);
-}
-
-.btn-quick-add {
-  font-size: 0.78rem;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  background: rgba(212, 163, 115, 0.15);
-  color: var(--accent-gold-dark);
-  border: 1px solid rgba(212, 163, 115, 0.4);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-quick-add:hover {
-  background: var(--accent-gold);
-  color: var(--text-on-accent);
-  font-weight: 700;
-}
-
-.btn-cancel-booking {
-  font-size: 0.78rem;
-  padding: 4px 12px;
-  border-radius: var(--radius-pill);
-  background: rgba(217, 138, 148, 0.12);
-  color: var(--accent-rose-dark);
-  border: 1px solid rgba(217, 138, 148, 0.3);
-  cursor: pointer;
-  transition: var(--transition);
-}
-
-.btn-cancel-booking:hover {
-  background: var(--accent-rose-dark);
-  color: var(--text-on-accent);
-}
-
-.footer-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 40px;
-}
-
 /* Section headers */
 
 .section-header {
@@ -429,20 +357,3 @@ p {
   padding: 20px 0 60px;
 }
 
-@media (max-width: 900px) {
-  .footer-grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-.feature-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 4px;
-  color: var(--text-main);
-}
-
-.feature-desc {
-  font-size: 0.82rem;
-  color: var(--text-muted);
-}

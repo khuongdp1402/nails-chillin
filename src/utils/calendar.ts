@@ -1,4 +1,5 @@
 import type { Booking } from '../types';
+import { SITE } from '../data/site';
 
 /**
  * Tạo URL mở Google Calendar thêm lịch hẹn vào tài khoản cá nhân
@@ -16,7 +17,7 @@ export function generateGoogleCalendarUrl(booking: Booking, serviceSummary: stri
   const details = encodeURIComponent(
     `Lịch hẹn dịch vụ: ${serviceSummary}\nKhách hàng: ${booking.customerName}\nSố điện thoại: ${booking.phone}\nThời gian: ${booking.startTime} - ${booking.endTime} (${booking.date})\nTổng thanh toán: ${booking.totalPrice.toLocaleString('vi-VN')} đ\nGhi chú: ${booking.note || 'Không có'}`
   );
-  const location = encodeURIComponent('Aura Nails & Herbal Spa - 128 Đường Hoa Hồng, Quận 1, TP. HCM');
+  const location = encodeURIComponent(`${SITE.name} - ${SITE.address}`);
 
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startIso}/${endIso}&details=${details}&location=${location}`;
 }
@@ -42,7 +43,7 @@ export function downloadIcsFile(booking: Booking, serviceSummary: string): void 
     `DTEND:${cleanDate}T${endHours}00`,
     `SUMMARY:[Aura Spa] Hẹn làm đẹp: ${booking.customerName}`,
     `DESCRIPTION:Dịch vụ: ${serviceSummary} \\n Khách hàng: ${booking.customerName} \\n SĐT: ${booking.phone}`,
-    'LOCATION:Aura Nails & Herbal Spa, 128 Hoa Hong, Q1, TP.HCM',
+    `LOCATION:${SITE.name}\\, ${SITE.address.replace(/,/g, '\\,')}`,
     'STATUS:CONFIRMED',
     'BEGIN:VALARM',
     'TRIGGER:-PT30M',

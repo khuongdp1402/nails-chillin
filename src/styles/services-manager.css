@@ -388,6 +388,7 @@
 .sm-textarea { resize: vertical; min-height: 84px; }
 .sm-counter { align-self: flex-end; font-size: 0.76rem; color: var(--text-dim); }
 .sm-error { color: var(--accent-red); font-size: 0.82rem; }
+.sm-hint { color: var(--text-muted); font-size: 0.78rem; margin: 6px 0 0; }
 .sm-save-error { padding: 12px 14px; background: var(--accent-red-bg); border-radius: var(--radius-md); }
 .sm-toggle-field { padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); align-items: flex-start; }
 

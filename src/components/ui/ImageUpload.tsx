@@ -44,8 +44,12 @@ export function ImageUpload({ value, onChange }: ImageUploadProps) {
   const applyUrl = () => {
     const url = urlDraft.trim();
     if (!url) return;
-    if (!/^https?:\/\//i.test(url)) {
-      setError('Đường dẫn ảnh cần bắt đầu bằng http:// hoặc https://');
+    if (/^http:\/\//i.test(url)) {
+      setError('Bạn dùng đường dẫn ảnh https:// nhé, đường dẫn http:// sẽ không hiện được trên trang.');
+      return;
+    }
+    if (!/^https:\/\//i.test(url)) {
+      setError('Đường dẫn ảnh cần bắt đầu bằng https://');
       return;
     }
     setError('');

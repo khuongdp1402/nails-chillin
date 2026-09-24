@@ -1,4 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { getStoredServices } from '../data/services';
+import { getMinHints, formatHint } from '../utils/servicesSummary';
 import { Hand, Sparkles, Waves, X } from 'lucide-react';
 import type { CSSProperties, ReactNode } from 'react';
 import '../styles/chrome.css';
@@ -11,14 +13,19 @@ interface ModePickerProps {
   onClose: () => void;
 }
 
-const OPTIONS: { id: ServiceMode; title: string; hint: string; price: string; icon: ReactNode }[] = [
-  { id: 'nail', title: 'Làm nail', hint: 'Sơn gel, đắp móng, nail art', price: 'Từ 150.000đ · 45 phút', icon: <Hand size={28} /> },
-  { id: 'headspa', title: 'Gội đầu dưỡng sinh', hint: 'Thư giãn, dưỡng tóc, massage đầu', price: 'Từ 150.000đ · 45 phút', icon: <Waves size={28} /> },
-  { id: 'both', title: 'Cả hai', hint: 'Làm nail và gội đầu trong một buổi', price: 'Từ 300.000đ · 1 giờ 30 phút', icon: <Sparkles size={28} /> },
+const OPTIONS: { id: ServiceMode; title: string; hint: string; icon: ReactNode }[] = [
+  { id: 'nail', title: 'Làm nail', hint: 'Sơn gel, đắp móng, nail art', icon: <Hand size={28} /> },
+  { id: 'headspa', title: 'Gội đầu dưỡng sinh', hint: 'Thư giãn, dưỡng tóc, massage đầu', icon: <Waves size={28} /> },
+  { id: 'both', title: 'Cả hai', hint: 'Làm nail và gội đầu trong một buổi', icon: <Sparkles size={28} /> },
 ];
 
 export function ModePicker({ reopened, onClose }: ModePickerProps) {
   const { mode, setMode } = useMode();
+  const hints = useMemo(() => getMinHints(getStoredServices()), []);
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
   const [picked, setPicked] = useState<ServiceMode | null>(null);
   const rootRef = useRef<HTMLDivElement>(null);
   const visible = mode === null || reopened;
@@ -33,7 +40,7 @@ export function ModePicker({ reopened, onClose }: ModePickerProps) {
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && canClose) {
-        onClose();
+        onCloseRef.current();
         return;
       }
       if (e.key === 'Tab' && rootRef.current) {
@@ -56,7 +63,7 @@ export function ModePicker({ reopened, onClose }: ModePickerProps) {
       document.removeEventListener('keydown', onKey);
       prevFocus?.focus?.();
     };
-  }, [visible, canClose, onClose]);
+  }, [visible, canClose]);
 
   useEffect(() => {
     if (!picked) return;
@@ -64,10 +71,10 @@ export function ModePicker({ reopened, onClose }: ModePickerProps) {
     const t = window.setTimeout(() => {
       setMode(picked);
       setPicked(null);
-      onClose();
+      onCloseRef.current();
     }, reduce ? 0 : 420);
     return () => window.clearTimeout(t);
-  }, [picked, setMode, onClose]);
+  }, [picked, setMode]);
 
   if (!visible) return null;
 
@@ -101,7 +108,7 @@ export function ModePicker({ reopened, onClose }: ModePickerProps) {
               <span className="ch-card-icon">{o.icon}</span>
               <span className="ch-card-title">{o.title}</span>
               <span className="ch-card-hint">{o.hint}</span>
-              <span className="ch-card-price">{o.price}</span>
+              {hints[o.id] && <span className="ch-card-price">{formatHint(hints[o.id])}</span>}
             </button>
           ))}
         </div>

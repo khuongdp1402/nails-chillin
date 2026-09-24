@@ -121,7 +121,7 @@
 .ad-day.is-today { border-color: var(--accent-rose); }
 .ad-day.in-range { background: var(--bg-surface); border-color: var(--border-strong); }
 .ad-day.is-selected { background: var(--gradient-cta); color: var(--text-on-accent); border-color: transparent; box-shadow: var(--shadow-glow); }
-.ad-day-count { font-size: 0.68rem; font-weight: 700; background: var(--accent-rose); color: var(--text-on-accent); border-radius: var(--radius-pill); padding: 0 7px; line-height: 1.5; }
+.ad-day-count { font-size: 0.68rem; font-weight: 700; background: var(--accent-rose-dark); color: var(--text-on-accent); border-radius: var(--radius-pill); padding: 0 7px; line-height: 1.5; }
 .ad-day.is-selected .ad-day-count { background: var(--bg-card); color: var(--accent-rose-dark); }
 .ad-blank { visibility: hidden; }
 

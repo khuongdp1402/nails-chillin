@@ -12,6 +12,7 @@ import { attemptCreateBooking } from '../../utils/storage';
 import { generateGoogleCalendarUrl, downloadIcsFile } from '../../utils/calendar';
 import { useMode } from '../../context/ModeContext';
 import { zaloLink, SITE } from '../../data/site';
+import { SALON_HOURS } from '../../data/services';
 import { scrollToTarget } from '../../utils/scroll';
 import confetti from 'canvas-confetti';
 import {
@@ -35,7 +36,8 @@ interface BookingWizardProps {
   allBookings: Booking[];
   onBookingSuccess: () => void;
   targetDate?: string;
-  preselectedServiceId?: string;
+  /** Đổi nonce mỗi lần chọn để chọn lại cùng một món vẫn được áp dụng. */
+  preselect?: { id: string; nonce: number };
   onOpenLookbook: () => void;
 }
 
@@ -58,14 +60,25 @@ function formatDateVi(iso: string): string {
 const prefersReduced = () =>
   typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-const STEP_LABELS = ['Dịch vụ', 'Giờ hẹn', 'Xong'];
+const LEAD_MINUTES = 30;
+const LEAD_REASON = 'Cần đặt trước 30 phút';
+
+/** Ngày mặc định: hôm nay, hoặc ngày mai nếu tiệm đã hết giờ nhận khách. */
+function defaultDate(now: Date): string {
+  const closeM = timeToMinutes(SALON_HOURS.closeTime);
+  const nowM = now.getHours() * 60 + now.getMinutes();
+  const lastStart = closeM - SALON_HOURS.slotStepMinutes;
+  return nowM + LEAD_MINUTES > lastStart ? toIso(addDays(now, 1)) : toIso(now);
+}
+
+const STEP_LABELS =['Dịch vụ', 'Giờ hẹn', 'Xong'];
 
 export const BookingWizard: React.FC<BookingWizardProps> = ({
   services,
   allBookings,
   onBookingSuccess,
   targetDate,
-  preselectedServiceId,
+  preselect,
   onOpenLookbook,
 }) => {
   const { showsCategory } = useMode();
@@ -74,10 +87,14 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
   const [customerName, setCustomerName] = useState('');
   const [phone, setPhone] = useState('');
-  const [date, setDate] = useState<string>(() => targetDate || toIso(new Date()));
+  const [date, setDate] = useState<string>(() => {
+    const d = defaultDate(new Date());
+    return targetDate && targetDate === toIso(new Date()) ? d : targetDate || d;
+  });
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(
-    preselectedServiceId ? [preselectedServiceId] : []
+    preselect ? [preselect.id] : []
   );
+  const [zaloNotice, setZaloNotice] = useState<{ ok: boolean; text: string } | null>(null);
   const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null);
 
   const [concurrencyAlert, setConcurrencyAlert] = useState<string | null>(null);
@@ -95,19 +112,28 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
-
+  const currentStepRef = useRef(1);
   useEffect(() => {
-    if (targetDate) setDate(targetDate);
-  }, [targetDate]);
+    currentStepRef.current = currentStep;
+  }, [currentStep]);
 
+  // Mỗi lần chọn dịch vụ từ trang (kể cả chọn lại cùng món) đều được áp dụng và quay về bước 1
   useEffect(() => {
-    if (preselectedServiceId) {
-      setSelectedServiceIds((prev) =>
-        prev.includes(preselectedServiceId) ? prev : [...prev, preselectedServiceId]
-      );
-      setStep1Error(null);
+    if (!preselect) return;
+    setStep1Error(null);
+    if (currentStepRef.current === 3) {
+      // Đang ở màn hình xong: bắt đầu lượt đặt mới với món vừa chọn
+      setLastCreatedBooking(null);
+      setZaloNotice(null);
+      setSelectedStartTime(null);
+      setSelectedServiceIds([preselect.id]);
+      setDate(defaultDate(new Date()));
+      goToStep(1);
+      return;
     }
-  }, [preselectedServiceId]);
+    setSelectedServiceIds((prev) => (prev.includes(preselect.id) ? prev : [...prev, preselect.id]));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselect]);
 
   // Sau mỗi lần đổi bước: cuộn lên đầu wizard và focus tiêu đề
   useEffect(() => {
@@ -165,12 +191,22 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const availableSlots = useMemo(() => {
     const base = generateAvailableSlots(date, totalDurationMinutes, allBookings);
     if (date !== todayIso) return base;
-    return base.map((s) =>
-      timeToMinutes(s.timeStr) <= nowMinutes
-        ? { ...s, isAvailable: false, conflictReason: 'Đã qua giờ' }
-        : s
-    );
+    return base.map((s) => {
+      const start = timeToMinutes(s.timeStr);
+      if (start <= nowMinutes) return { ...s, isAvailable: false, conflictReason: 'Đã qua giờ' };
+      if (start < nowMinutes + LEAD_MINUTES) return { ...s, isAvailable: false, conflictReason: LEAD_REASON };
+      return s;
+    });
   }, [date, todayIso, nowMinutes, totalDurationMinutes, allBookings]);
+
+  // Hôm nay không còn giờ nào có thể nhận (đã qua, sát giờ hoặc vượt giờ đóng cửa)
+  const closedToday =
+    date === todayIso &&
+    !availableSlots.some(
+      (s) =>
+        timeToMinutes(s.timeStr) >= nowMinutes + LEAD_MINUTES &&
+        !(s.conflictReason || '').startsWith('Vượt quá')
+    );
 
   useEffect(() => {
     if (selectedStartTime) {
@@ -278,9 +314,12 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
   const handleResetForNewBooking = () => {
     setSelectedStartTime(null);
+    setSelectedServiceIds([]);
     setLastCreatedBooking(null);
     setConcurrencyAlert(null);
-    setDate(toIso(new Date()));
+    setZaloNotice(null);
+    setStep1Error(null);
+    setDate(defaultDate(new Date()));
     goToStep(1);
   };
 
@@ -288,6 +327,24 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     `Chào tiệm, mình là ${b.customerName}. Mình đã đặt lịch ${b.startTime} – ${b.endTime} ngày ${formatDateVi(
       b.date
     )}, dịch vụ: ${getServiceNames(b.serviceIds, services)}. Nhờ tiệm xác nhận giúp mình nhé.`;
+
+  // zalo.me không điền sẵn tin nhắn được, nên chép nội dung để khách dán vào Zalo
+  const handleZaloClick = (b: Booking) => {
+    const text = zaloMessage(b);
+    const done = (ok: boolean) => setZaloNotice({ ok, text });
+    try {
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(text).then(
+          () => done(true),
+          () => done(false)
+        );
+        return;
+      }
+    } catch {
+      /* rơi xuống bước dự phòng */
+    }
+    done(false);
+  };
 
   const renderService = (service: Service) => {
     const isSelected = activeIds.includes(service.id);
@@ -515,11 +572,20 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                           ? `đến ${slot.endTimeStr}`
                           : slot.conflictReason === 'Đã qua giờ'
                           ? 'Đã qua giờ'
+                          : slot.conflictReason === LEAD_REASON
+                          ? 'Quá sát giờ'
                           : 'Hết chỗ'}
                       </span>
                     </button>
                   );
                 })}
+              </div>
+            ) : closedToday ? (
+              <div id="bk-slots" className="bk-empty">
+                Hôm nay tiệm đã hết giờ nhận khách.{' '}
+                <button type="button" className="bk-link-btn" onClick={() => setDate(tomorrowIso)}>
+                  Chọn ngày mai
+                </button>
               </div>
             ) : (
               <div id="bk-slots" className="bk-empty">
@@ -605,10 +671,11 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
 
             <div className="bk-actions">
               <a
-                href={zaloLink(zaloMessage(lastCreatedBooking))}
+                href={zaloLink()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn bk-zalo"
+                onClick={() => handleZaloClick(lastCreatedBooking)}
               >
                 <MessageCircle size={16} />
                 <span>Nhắn Zalo cho tiệm</span>
@@ -639,6 +706,19 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 <span>Đặt thêm lịch</span>
               </button>
             </div>
+            {zaloNotice && (
+              <p className="bk-hint" role="status" style={{ marginTop: 12 }}>
+                {zaloNotice.ok ? (
+                  'Đã chép nội dung đặt lịch, bạn dán vào Zalo nhé'
+                ) : (
+                  <>
+                    Bạn chép nội dung dưới đây rồi dán vào Zalo nhé:
+                    <br />
+                    <span style={{ userSelect: 'all' }}>{zaloNotice.text}</span>
+                  </>
+                )}
+              </p>
+            )}
           </div>
         </div>
       )}
