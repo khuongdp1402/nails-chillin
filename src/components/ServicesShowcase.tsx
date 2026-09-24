@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
+import React from 'react';
+import '../styles/services.css';
 import type { Service, ServiceCategory } from '../types';
 import { formatDuration } from '../utils/scheduler';
-import { Clock, Sparkles, Images } from 'lucide-react';
+import { useMode } from '../context/ModeContext';
+import { useReveal } from '../hooks/useReveal';
+import { Clock } from 'lucide-react';
 
 interface ServicesShowcaseProps {
   services: Service[];
@@ -10,126 +13,95 @@ interface ServicesShowcaseProps {
   onOpenLookbook: () => void;
 }
 
+export const ServiceCard: React.FC<{
+  service: Service;
+  index: number;
+  onSelect: (id: string) => void;
+}> = ({ service, index, onSelect }) => {
+  const ref = useReveal<HTMLLIElement>(Math.min(index, 7) * 70);
+  return (
+    <li ref={ref} className="svc-cell">
+      <article className="svc-card">
+        <div className="svc-media">
+          <img src={service.imageUrl} alt={service.name} loading="lazy" />
+          {service.badge && <span className="svc-badge">{service.badge}</span>}
+        </div>
+        <div className="svc-info">
+          <h3 className="svc-name">{service.name}</h3>
+          <span className="svc-dur">
+            <Clock size={12} />
+            {formatDuration(service.durationMinutes)}
+          </span>
+          <div className="svc-foot">
+            <span className="price svc-price">{service.price.toLocaleString('vi-VN')}đ</span>
+            <button type="button" className="btn btn-primary svc-book" onClick={() => onSelect(service.id)}>
+              Đặt
+            </button>
+          </div>
+        </div>
+      </article>
+    </li>
+  );
+};
+
+const Heading: React.FC = () => {
+  const ref = useReveal<HTMLDivElement>();
+  return (
+    <div ref={ref} className="svc-head">
+      <span className="svc-script">Dịch vụ của tiệm</span>
+      <h2 className="svc-title">Chọn món bạn thích</h2>
+      <p className="svc-desc">Giá và thời gian ghi rõ từng món. Bấm “Đặt” để chọn giờ ngay.</p>
+    </div>
+  );
+};
+
 export const ServicesShowcase: React.FC<ServicesShowcaseProps> = ({
   services,
   selectedCategoryFilter = 'all',
   onSelectService,
   onOpenLookbook,
 }) => {
-  const [activeTab, setActiveTab] = useState<'all' | ServiceCategory>(selectedCategoryFilter);
+  const { mode, showsCategory } = useMode();
+  const moreRef = useReveal<HTMLDivElement>();
 
-  const filteredServices = services.filter((s) => {
-    if (activeTab === 'all') return true;
-    return s.category === activeTab;
-  });
+  const visible = services.filter(
+    (s) =>
+      showsCategory(s.category) &&
+      s.showOnLanding !== false &&
+      (selectedCategoryFilter === 'all' || s.category === selectedCategoryFilter),
+  );
+
+  const renderGrid = (list: Service[], label?: string) => (
+    <div className="svc-group">
+      {label && <h3 className="svc-group-title">{label}</h3>}
+      {list.length === 0 ? (
+        <p className="svc-empty">Tiệm đang cập nhật thêm món mới cho bạn.</p>
+      ) : (
+        <ul className="svc-grid">
+          {list.map((s, i) => (
+            <ServiceCard key={s.id} service={s} index={i} onSelect={onSelectService} />
+          ))}
+        </ul>
+      )}
+    </div>
+  );
 
   return (
-    <section className="services-showcase" style={{ padding: '30px 0 50px' }}>
+    <section className="svc-section" id="services">
       <div className="container">
-        <div className="section-header">
-          <span className="section-tag">Thực Đơn Làm Đẹp & Trị Liệu</span>
-          <h2 className="section-title">
-            Gói Dịch Vụ <span className="gold-gradient-text">Nail & Gội Đầu Dưỡng Sinh</span>
-          </h2>
-          <p className="section-desc">
-            Thời gian phục vụ tiêu chuẩn được ấn định cố định cho từng gói dịch vụ để đảm bảo trải nghiệm thư giãn trọn vẹn nhất cho khách hàng.
-          </p>
-        </div>
-
-        {/* Filter Navigation & Lookbook Trigger */}
-        <div className="filter-tabs-container">
-          <div className="filter-pills">
-            <button
-              type="button"
-              className={`filter-pill ${activeTab === 'all' ? 'active' : ''}`}
-              onClick={() => setActiveTab('all')}
-            >
-              Tất cả dịch vụ ({services.length})
-            </button>
-
-            <button
-              type="button"
-              className={`filter-pill ${activeTab === 'nail' ? 'active' : ''}`}
-              onClick={() => setActiveTab('nail')}
-            >
-              💅 Làm Móng Nghệ Thuật (Nail Art)
-            </button>
-
-            <button
-              type="button"
-              className={`filter-pill ${activeTab === 'headspa' ? 'active-spa' : ''}`}
-              onClick={() => setActiveTab('headspa')}
-            >
-              🌿 Gội Đầu Dưỡng Sinh Thảo Dược
-            </button>
-          </div>
-
-          <button
-            type="button"
-            className="btn btn-secondary"
-            style={{ fontSize: '0.82rem', padding: '8px 16px' }}
-            onClick={onOpenLookbook}
-          >
-            <Images size={16} color="var(--accent-gold)" />
-            <span>Xem Tất Cả Ảnh Mẫu (Lookbook)</span>
+        <Heading />
+        {mode === 'both' ? (
+          <>
+            {renderGrid(visible.filter((s) => s.category === 'nail'), 'Làm nail')}
+            {renderGrid(visible.filter((s) => s.category === 'headspa'), 'Gội đầu dưỡng sinh')}
+          </>
+        ) : (
+          renderGrid(visible)
+        )}
+        <div ref={moreRef} className="svc-more">
+          <button type="button" className="btn btn-secondary" onClick={onOpenLookbook}>
+            Xem tất cả mẫu & dịch vụ
           </button>
-        </div>
-
-        {/* Services Grid with Visual Photography */}
-        <div className="services-masonry">
-          {filteredServices.map((service) => (
-            <div key={service.id} className="service-card-v2">
-              <div className="service-card-img-wrap">
-                <img src={service.imageUrl} alt={service.name} />
-                <span className="service-category-badge">
-                  {service.category === 'nail' ? '💅 NAIL ART' : '🌿 DƯỠNG SINH'}
-                </span>
-
-                {service.badge && (
-                  <span className="service-badge-tag">
-                    {service.badge}
-                  </span>
-                )}
-              </div>
-
-              <div className="service-card-content">
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '8px', marginBottom: '8px' }}>
-                    <h3 style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--text-main)', lineHeight: 1.35 }}>
-                      {service.name}
-                    </h3>
-                  </div>
-
-                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginBottom: '14px', lineHeight: 1.5 }}>
-                    {service.description}
-                  </p>
-                </div>
-
-                <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                    <span className="service-badge-duration" style={{ fontSize: '0.78rem' }}>
-                      <Clock size={12} />
-                      <span>{formatDuration(service.durationMinutes)}</span>
-                    </span>
-
-                    <span style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                      {service.price.toLocaleString('vi-VN')} đ
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="btn btn-primary"
-                    style={{ width: '100%', padding: '9px 14px', fontSize: '0.85rem' }}
-                    onClick={() => onSelectService(service.id)}
-                  >
-                    <Sparkles size={14} />
-                    <span>Chọn Làm Dịch Vụ Này</span>
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </div>
     </section>
