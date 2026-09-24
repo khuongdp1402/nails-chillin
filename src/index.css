@@ -5,39 +5,47 @@
    ========================================================================== */
 
 :root {
-  /* Canvas & Surfaces — warm blush pastel */
-  --bg-main: #fdf3f1;
-  --bg-card: #fffaf8;
-  --bg-surface: #fbe9e6;
-  --bg-card-hover: #fdeae6;
+  /* Canvas & Surfaces — luxurious ombre blush */
+  --bg-main: #fff6f8;
+  --bg-card: #ffffff;
+  --bg-surface: #ffe9ef;
+  --bg-card-hover: #fff0f4;
 
   /* Accents */
-  --accent-rose: #d98a94;
-  --accent-rose-dark: #c06975;
-  --accent-gold: #d4a373;
-  --accent-gold-dark: #a67c52;
+  --accent-rose: #e23e68;
+  --accent-rose-dark: #b3123b;
+  --accent-red: #c8102e;
+  --accent-red-bg: rgba(200, 16, 46, 0.1);
+  --accent-gold: #c9963a;
+  --accent-gold-dark: #8f6420;
 
   /* Legacy token aliases — kept so pre-redesign components still resolve */
   --accent-emerald: var(--accent-rose-dark);
-  --accent-red: #c0392b;
-  --accent-red-bg: rgba(192, 57, 43, 0.1);
-  --text-gold: var(--accent-gold);
+  --text-gold: var(--accent-gold-dark);
   --radius-full: var(--radius-pill);
 
   /* Typography colors */
-  --text-main: #3c2321;
-  --text-muted: #8a6b66;
-  --text-dim: #b79a94;
-  --text-on-accent: #fffaf8;
+  --text-main: #3a1220;
+  --text-muted: #7a5560;
+  --text-dim: #a98a93;
+  --text-on-accent: #ffffff;
+  --price-color: #c8102e;
 
   /* Borders */
-  --border-subtle: #f0d9d4;
-  --border-strong: #e3b9b3;
+  --border-subtle: #f5d3dc;
+  --border-strong: #eaa9ba;
 
-  /* Elevation — soft, diffused (opposite of flat) */
-  --shadow-soft: 0 10px 30px -12px rgba(60, 35, 33, 0.18);
-  --shadow-card: 0 6px 20px -8px rgba(60, 35, 33, 0.14);
-  --shadow-lift: 0 16px 40px -14px rgba(60, 35, 33, 0.26);
+  /* Gradients */
+  --gradient-ombre: linear-gradient(135deg, #ffc2d1 0%, #fff6f8 40%, #ff6f8e 70%, #c8102e 100%);
+  --gradient-cta: linear-gradient(135deg, #e23e68, #b3123b);
+  --gradient-cta-hover: linear-gradient(135deg, #ee4d78, #c8102e);
+  --gradient-soft: linear-gradient(180deg, #ffe9ef, #ffffff);
+
+  /* Elevation */
+  --shadow-soft: 0 10px 30px -12px rgba(120, 20, 50, 0.2);
+  --shadow-card: 0 6px 20px -8px rgba(120, 20, 50, 0.16);
+  --shadow-lift: 0 18px 44px -14px rgba(179, 18, 59, 0.32);
+  --shadow-glow: 0 10px 30px -6px rgba(226, 62, 104, 0.5);
 
   /* Fonts */
   --font-display: 'Playfair Display', Georgia, serif;
@@ -45,11 +53,15 @@
   --font-body: 'Be Vietnam Pro', system-ui, -apple-system, sans-serif;
 
   /* Radii */
-  --radius-card: 24px;
+  --radius-card: 20px;
   --radius-md: 16px;
-  --radius-sm: 10px;
+  --radius-sm: 12px;
   --radius-pill: 9999px;
 
+  /* Motion */
+  --ease-lux: cubic-bezier(0.16, 1, 0.3, 1);
+  --dur-fast: 0.2s;
+  --dur: 0.45s;
   --transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -115,37 +127,132 @@ p {
   border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
-  transition: var(--transition);
+  transition: transform var(--dur-fast) var(--ease-lux), box-shadow var(--dur-fast) var(--ease-lux),
+    background var(--dur-fast) var(--ease-lux), border-color var(--dur-fast) var(--ease-lux),
+    opacity var(--dur-fast) var(--ease-lux);
   user-select: none;
 }
 
+.btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
 .btn-primary {
-  background: var(--accent-rose-dark);
+  background: var(--gradient-cta);
   color: var(--text-on-accent);
   box-shadow: var(--shadow-card);
 }
 
-.btn-primary:hover {
-  background: var(--accent-rose-dark);
+.btn-primary:hover:not(:disabled) {
+  background: var(--gradient-cta-hover);
   transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
+  box-shadow: var(--shadow-glow);
 }
 
-.btn-primary:disabled {
+.btn-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-ghost:disabled {
   opacity: 0.45;
   cursor: not-allowed;
   transform: none;
 }
 
 .btn-secondary {
-  background: var(--bg-card);
+  background: #ffffff;
   color: var(--accent-rose-dark);
-  border: 1px solid var(--border-strong);
+  border: 1.5px solid var(--border-strong);
 }
 
-.btn-secondary:hover {
+.btn-secondary:hover:not(:disabled) {
   background: var(--bg-surface);
   border-color: var(--accent-rose);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--accent-rose-dark);
+  border: 1.5px solid transparent;
+}
+
+.btn-ghost:hover:not(:disabled) {
+  background: var(--bg-surface);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-surface);
+  color: var(--accent-rose-dark);
+  border: 1px solid var(--border-subtle);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.price {
+  color: var(--price-color);
+  font-weight: 700;
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(18px);
+  transition: opacity 0.6s var(--ease-lux) var(--reveal-delay, 0ms),
+    transform 0.6s var(--ease-lux) var(--reveal-delay, 0ms);
+}
+
+.reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+@keyframes step-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.step-enter {
+  animation: step-enter var(--dur) var(--ease-lux) both;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  .reveal,
+  .reveal.is-visible {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+  .step-enter {
+    animation: none;
+  }
 }
 
 .btn-emerald {

@@ -1,8 +1,7 @@
 import type { Booking } from '../types';
-import { INITIAL_MOCK_BOOKINGS } from '../data/services';
 import { checkBookingConflict } from './scheduler';
 
-const STORAGE_KEY = 'aura_nail_bookings_v1';
+const STORAGE_KEY = 'aura_nail_bookings_v2';
 const BROADCAST_CHANNEL_NAME = 'aura_nail_sync_channel';
 
 // Khởi tạo BroadcastChannel để đồng bộ tức thời giữa các tab trình duyệt
@@ -21,15 +20,11 @@ try {
 export function getStoredBookings(): Booking[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
-      // Khởi tạo dữ liệu mẫu ban đầu
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_MOCK_BOOKINGS));
-      return INITIAL_MOCK_BOOKINGS;
-    }
+    if (!raw) return [];
     return JSON.parse(raw);
   } catch (e) {
     console.error('Lỗi khi đọc bookings từ localStorage:', e);
-    return INITIAL_MOCK_BOOKINGS;
+    return [];
   }
 }
 
@@ -48,11 +43,11 @@ export function saveBookings(bookings: Booking[]): void {
 }
 
 /**
- * Khôi phục lại dữ liệu mẫu 25/09/2026 ban đầu
+ * Xóa toàn bộ lịch hẹn (không còn dữ liệu mẫu)
  */
 export function resetBookingsToDefault(): Booking[] {
-  saveBookings(INITIAL_MOCK_BOOKINGS);
-  return INITIAL_MOCK_BOOKINGS;
+  saveBookings([]);
+  return [];
 }
 
 /**
@@ -87,6 +82,7 @@ export function attemptCreateBooking(
   // 4. Nếu khung giờ an toàn -> Tạo lịch và lưu lại
   const newBooking: Booking = {
     ...bookingInput,
+    staffId: bookingInput.staffId ?? 'owner',
     id: `book-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
     status: 'confirmed',
     createdAt: new Date().toISOString(),

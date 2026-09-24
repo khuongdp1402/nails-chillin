@@ -10,6 +10,8 @@ export interface Service {
   imageUrl: string;
   badge?: string; // e.g. "Hot Trend", "Bán chạy", "Thư giãn"
   popular?: boolean;
+  showOnLanding?: boolean; // undefined = true
+  capacity?: number; // khách làm cùng lúc, mặc định 1
 }
 
 export interface LookbookItem {
@@ -37,6 +39,7 @@ export interface Booking {
   status: BookingStatus;
   note?: string;
   createdAt: string;
+  staffId?: string; // mặc định 'owner'
   reminderMorningSent?: boolean;
   reminder30mSent?: boolean;
 }

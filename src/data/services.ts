@@ -1,4 +1,4 @@
-import type { Service, Booking, LookbookItem } from '../types';
+import type { Service, LookbookItem } from '../types';
 
 export const DEFAULT_SERVICES: Service[] = [
   // --- MODULE 1: LÀM MÓNG NGHỆ THUẬT (NAIL ART & SPA) ---
@@ -10,8 +10,9 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 180000,
     description: 'Sơn gel thạch trong trẻo, lớp bóng tráng gương bền màu 3-4 tuần, dưỡng móng keratin tự nhiên.',
     imageUrl: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80',
-    badge: 'Hot Trend',
+    badge: 'Hot trend',
     popular: true,
+    showOnLanding: true,
   },
   {
     id: 'dap-mong-ombre',
@@ -23,6 +24,7 @@ export const DEFAULT_SERVICES: Service[] = [
     imageUrl: 'https://images.unsplash.com/photo-1604654894610-df63bc536371?auto=format&fit=crop&w=800&q=80',
     badge: 'Bán chạy',
     popular: true,
+    showOnLanding: true,
   },
   {
     id: 've-mong-dinh-da',
@@ -32,8 +34,9 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 120000,
     description: 'Thiết kế hoa nổi 3D, mắt mèo kim cương, vân đá cẩm thạch và đính đá pha lê Swarovski cao cấp.',
     imageUrl: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80',
-    badge: 'Nghệ thuật',
+    badge: 'Được yêu thích',
     popular: true,
+    showOnLanding: true,
   },
   {
     id: 'up-mong-thiet-ke',
@@ -43,7 +46,8 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 250000,
     description: 'Úp móng phom chuẩn ôm sát chân móng, độ bền cao, không gây tổn thương bề mặt móng thật.',
     imageUrl: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?auto=format&fit=crop&w=800&q=80',
-    badge: 'Tiện lợi',
+    badge: 'Ưu đãi',
+    showOnLanding: false,
   },
 
   // --- MODULE 2: GỘI ĐẦU DƯỠNG SINH & TRỊ LIỆU THẢO DƯỢC ---
@@ -55,8 +59,9 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 150000,
     description: 'Nấu nước bồ kết tươi, sả chanh, vỏ bưởi, hà thủ ô tự nhiên. Làm sạch sâu da đầu, giảm rụng tóc và gàu.',
     imageUrl: 'https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80',
-    badge: 'Thảo Mộc',
+    badge: 'Thư giãn',
     popular: true,
+    showOnLanding: true,
   },
   {
     id: 'goi-duong-sinh-trung-hoa',
@@ -66,8 +71,9 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 250000,
     description: 'Ấn huyệt đạo vùng đầu, xông tai bài độc, tưới nước tuần hoàn chữ U thư giãn, đả thông tuần hoàn máu não.',
     imageUrl: 'https://images.unsplash.com/photo-1519823551278-64ac92734fb1?auto=format&fit=crop&w=800&q=80',
-    badge: 'Best Seller',
+    badge: 'Bán chạy',
     popular: true,
+    showOnLanding: true,
   },
   {
     id: 'combo-goi-massage-co-vai-gay',
@@ -77,8 +83,9 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 380000,
     description: 'Liệu trình toàn diện: Gội thảo dược + Massage bấm huyệt cổ vai gáy, đi đá nóng bazan giải tỏa căng thẳng.',
     imageUrl: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80',
-    badge: 'VIP Thư Giãn',
+    badge: 'Cao cấp',
     popular: true,
+    showOnLanding: true,
   },
   {
     id: 'goi-hoang-cung-thai-doc',
@@ -88,7 +95,8 @@ export const DEFAULT_SERVICES: Service[] = [
     price: 320000,
     description: 'Ủ bùn khoáng hữu cơ, đắp mặt nạ ngọc trai thảo mộc, chải lược kinh lạc sừng trâu, xông mắt thảo mộc.',
     imageUrl: 'https://images.unsplash.com/photo-1512290900672-1f55b92750e3?auto=format&fit=crop&w=800&q=80',
-    badge: 'Trị Liệu',
+    badge: 'Mới',
+    showOnLanding: false,
   },
 ];
 
@@ -157,7 +165,7 @@ export const SALON_HOURS = {
 };
 
 // Quản lý Dịch vụ trong LocalStorage (cho phép Chủ tiệm CRUD trực tiếp)
-const SERVICES_STORAGE_KEY = 'aura_salon_services_v2';
+const SERVICES_STORAGE_KEY = 'aura_salon_services_v3';
 
 export function getStoredServices(): Service[] {
   try {
@@ -180,34 +188,3 @@ export function saveStoredServices(services: Service[]): void {
   }
 }
 
-// Dữ liệu mẫu ngày 25/09/2026
-export const INITIAL_MOCK_BOOKINGS: Booking[] = [
-  {
-    id: 'demo-booking-1',
-    customerName: 'Nguyễn A',
-    phone: '0901234567',
-    date: '2026-09-25',
-    startTime: '09:00',
-    endTime: '11:00',
-    serviceIds: ['son-gel-thach', 've-mong-dinh-da'],
-    totalMinutes: 90, // hoặc 120 phút theo dịch vụ
-    totalPrice: 300000,
-    status: 'confirmed',
-    note: 'Làm móng tay thạch hồng',
-    createdAt: '2026-09-23T08:00:00.000Z',
-  },
-  {
-    id: 'demo-booking-2',
-    customerName: 'Trần B',
-    phone: '0912345678',
-    date: '2026-09-25',
-    startTime: '11:00',
-    endTime: '12:30',
-    serviceIds: ['combo-goi-massage-co-vai-gay'],
-    totalMinutes: 90,
-    totalPrice: 380000,
-    status: 'confirmed',
-    note: 'Trị liệu đau mỏi cổ vai gáy',
-    createdAt: '2026-09-23T08:30:00.000Z',
-  },
-];

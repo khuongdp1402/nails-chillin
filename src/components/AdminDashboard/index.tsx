@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { Booking, Service, ServiceCategory } from '../../types';
+import type { Booking, Service } from '../../types';
 import {
   buildDailyTimeline,
   formatDuration,
@@ -12,7 +12,7 @@ import {
   resetBookingsToDefault,
   attemptCreateBooking,
 } from '../../utils/storage';
-import { saveStoredServices } from '../../data/services';
+import { ServicesManager } from './ServicesManager';
 import {
   generateGoogleCalendarUrl,
   generateMorningReminderText,
@@ -33,8 +33,7 @@ import {
   Copy,
   ExternalLink,
   CalendarPlus,
-  Sparkles,
-  Trash2,
+  Sparkles,
   AlertTriangle,
 } from 'lucide-react';
 
@@ -71,15 +70,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [walkinServiceId, setWalkinServiceId] = useState<string>(services[0]?.id || 'son-gel-thach');
   const [quickAddError, setQuickAddError] = useState<string | null>(null);
 
-  // Form Thêm / Khai báo gói dịch vụ mới
-  const [newServiceName, setNewServiceName] = useState<string>('');
-  const [newServiceCategory, setNewServiceCategory] = useState<ServiceCategory>('headspa');
-  const [newServiceDuration, setNewServiceDuration] = useState<number>(60);
-  const [newServicePrice, setNewServicePrice] = useState<number>(250000);
-  const [newServiceDesc, setNewServiceDesc] = useState<string>('');
-  const [newServiceImage, setNewServiceImage] = useState<string>('https://images.unsplash.com/photo-1540555700478-4be289fbecef?auto=format&fit=crop&w=800&q=80');
-  const [newServiceBadge, setNewServiceBadge] = useState<string>('Mới');
-  const [serviceFormSuccess, setServiceFormSuccess] = useState<string | null>(null);
 
   // State thông báo copy
   const [copiedIndex, setCopiedIndex] = useState<string | null>(null);
@@ -172,45 +162,6 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
     setQuickAddModal({ isOpen: false, startTime: '', maxMinutes: 60 });
     onDataChanged();
-  };
-
-  // Thêm gói dịch vụ mới
-  const handleCreateService = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newServiceName.trim()) {
-      alert('Vui lòng nhập tên gói dịch vụ');
-      return;
-    }
-
-    const newService: Service = {
-      id: `custom-srv-${Date.now()}`,
-      name: newServiceName.trim(),
-      category: newServiceCategory,
-      durationMinutes: Number(newServiceDuration),
-      price: Number(newServicePrice),
-      description: newServiceDesc.trim() || 'Dịch vụ chăm sóc và làm đẹp chất lượng cao tại Aura Spa.',
-      imageUrl: newServiceImage.trim(),
-      badge: newServiceBadge.trim() || undefined,
-      popular: true,
-    };
-
-    const updated = [...services, newService];
-    saveStoredServices(updated);
-    onServicesChanged(updated);
-
-    setServiceFormSuccess(`Đã khai báo thành công dịch vụ "${newService.name}"!`);
-    setNewServiceName('');
-    setNewServiceDesc('');
-    setTimeout(() => setServiceFormSuccess(null), 3000);
-  };
-
-  // Xóa bớt dịch vụ
-  const handleDeleteService = (serviceId: string, name: string) => {
-    if (window.confirm(`Xóa dịch vụ "${name}" khỏi danh mục salon?`)) {
-      const updated = services.filter((s) => s.id !== serviceId);
-      saveStoredServices(updated);
-      onServicesChanged(updated);
-    }
   };
 
   // Copy tin nhắn nhắc hẹn
@@ -793,200 +744,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
-        {/* TAB 4: QUẢN LÝ GÓI DỊCH VỤ (KHAI BÁO & CHỈNH SỬA CHO CHỦ TIỆM) */}
+        {/* TAB 4: QUẢN LÝ DỊCH VỤ */}
         {viewTab === 'services' && (
-          <div>
-            <div style={{ marginBottom: '20px' }}>
-              <h3 style={{ fontSize: '1.3rem', color: 'var(--text-main)', marginBottom: '4px' }}>
-                Khai Báo & Quản Lý Gói Dịch Vụ
-              </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                Chủ tiệm có thể trực tiếp thêm gói mới, cài đặt thời lượng phục vụ cố định (phút), giá dự kiến và link ảnh mẫu để hiển thị ngay ra ngoài Landing page.
-              </p>
-            </div>
-
-            {/* FORM THÊM GÓI DỊCH VỤ MỚI */}
-            <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border-subtle)', borderRadius: 'var(--radius-md)', padding: '22px', marginBottom: '28px' }}>
-              <h4 style={{ fontSize: '1.1rem', color: 'var(--accent-gold)', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <PackagePlus size={18} />
-                <span>Thêm Mới Gói Dịch Vụ Salon</span>
-              </h4>
-
-              {serviceFormSuccess && (
-                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--text-main)', color: 'var(--text-main)', padding: '10px 14px', borderRadius: '6px', marginBottom: '16px', fontSize: '0.88rem' }}>
-                  ✓ {serviceFormSuccess}
-                </div>
-              )}
-
-              <form onSubmit={handleCreateService}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Tên gói dịch vụ:</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Ví dụ: Gội Dưỡng Sinh Trái Bưởi Thải Độc"
-                      value={newServiceName}
-                      onChange={(e) => setNewServiceName(e.target.value)}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Phân loại module:</label>
-                    <select
-                      className="form-input"
-                      value={newServiceCategory}
-                      onChange={(e) => setNewServiceCategory(e.target.value as ServiceCategory)}
-                    >
-                      <option value="nail">💅 Làm Móng Nghệ Thuật (Nail Art)</option>
-                      <option value="headspa">🌿 Gội Đầu Dưỡng Sinh Thảo Dược</option>
-                    </select>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Thời lượng thực hiện cố định (Phút):</label>
-                    <input
-                      type="number"
-                      step={15}
-                      min={15}
-                      max={240}
-                      className="form-input"
-                      value={newServiceDuration}
-                      onChange={(e) => setNewServiceDuration(Number(e.target.value))}
-                      required
-                    />
-                    <span style={{ fontSize: '0.74rem', color: 'var(--text-dim)', marginTop: '4px', display: 'block' }}>
-                      = {formatDuration(newServiceDuration)}
-                    </span>
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Giá tiền dự kiến (VND):</label>
-                    <input
-                      type="number"
-                      step={10000}
-                      min={10000}
-                      className="form-input"
-                      value={newServicePrice}
-                      onChange={(e) => setNewServicePrice(Number(e.target.value))}
-                      required
-                    />
-                    <span style={{ fontSize: '0.74rem', color: 'var(--accent-gold)', marginTop: '4px', display: 'block' }}>
-                      {newServicePrice.toLocaleString('vi-VN')} đ
-                    </span>
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label className="form-label">Mô tả dịch vụ chi tiết:</label>
-                  <textarea
-                    className="form-input"
-                    rows={2}
-                    placeholder="Mô tả các bước thực hiện và lợi ích cho khách hàng..."
-                    value={newServiceDesc}
-                    onChange={(e) => setNewServiceDesc(e.target.value)}
-                  />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-                  <div className="form-group">
-                    <label className="form-label">Link ảnh mẫu (URL thực tế):</label>
-                    <input
-                      type="url"
-                      className="form-input"
-                      value={newServiceImage}
-                      onChange={(e) => setNewServiceImage(e.target.value)}
-                      placeholder="https://..."
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label className="form-label">Nhãn nổi bật (Badge):</label>
-                    <input
-                      type="text"
-                      className="form-input"
-                      placeholder="Ví dụ: Hot Trend, Mới, VIP"
-                      value={newServiceBadge}
-                      onChange={(e) => setNewServiceBadge(e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '14px' }}>
-                  <button type="submit" className="btn btn-primary">
-                    <PlusCircle size={16} />
-                    <span>Lưu & Hiển Thị Ra Landing Page</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-
-            {/* DANH SÁCH DỊCH VỤ HIỆN CÓ */}
-            <h4 style={{ fontSize: '1.1rem', color: 'var(--text-main)', marginBottom: '14px' }}>
-              Danh Sách Dịch Vụ Đang Áp Dụng ({services.length} gói)
-            </h4>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px' }}>
-              {services.map((srv) => (
-                <div
-                  key={srv.id}
-                  style={{
-                    background: 'var(--bg-card)',
-                    border: '1px solid var(--border-subtle)',
-                    borderRadius: 'var(--radius-sm)',
-                    overflow: 'hidden',
-                    display: 'flex',
-                    flexDirection: 'column',
-                  }}
-                >
-                  <div style={{ height: '120px', position: 'relative' }}>
-                    <img src={srv.imageUrl} alt={srv.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '8px',
-                        left: '8px',
-                        fontSize: '0.66rem',
-                        padding: '2px 8px',
-                        borderRadius: 'var(--radius-full)',
-                        background: 'var(--bg-main)',
-                        border: '1px solid var(--border-subtle)',
-                        color: 'var(--text-main)',
-                        fontWeight: 500,
-                        textTransform: 'uppercase',
-                      }}
-                    >
-                      {srv.category === 'nail' ? '💅 NAIL' : '🌿 DƯỠNG SINH'}
-                    </span>
-                  </div>
-
-                  <div style={{ padding: '14px', flex: 1, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                    <div>
-                      <h5 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)', marginBottom: '4px' }}>
-                        {srv.name}
-                      </h5>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-muted)', marginBottom: '8px' }}>
-                        <span>⏱ {formatDuration(srv.durationMinutes)}</span>
-                        <strong style={{ color: 'var(--accent-gold)' }}>{srv.price.toLocaleString('vi-VN')} đ</strong>
-                      </div>
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'flex-end', paddingTop: '8px', borderTop: '1px dashed var(--border-subtle)' }}>
-                      <button
-                        type="button"
-                        style={{ background: 'none', border: 'none', color: 'var(--accent-red)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}
-                        onClick={() => handleDeleteService(srv.id, srv.name)}
-                      >
-                        <Trash2 size={13} />
-                        <span>Xóa</span>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
+          <ServicesManager services={services} onServicesChanged={onServicesChanged} />
         )}
 
         {/* Modal Thêm Nhanh Khách Vãng Lai */}
