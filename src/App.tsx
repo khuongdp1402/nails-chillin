@@ -11,17 +11,42 @@ import { BookingWizard } from './components/BookingWizard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { LookbookModal } from './components/LookbookModal';
 import { Footer } from './components/Footer';
+import { ModePicker } from './components/ModePicker';
+import { ZaloFab } from './components/ZaloFab';
+import { scrollToTarget } from './utils/scroll';
+
+const isAdminHash = () => window.location.hash.replace(/^#\/?/, '').startsWith('admin');
+
+function todayLocalISO(): string {
+  const d = new Date();
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 
 export function App() {
-  const [isAdminView, setIsAdminView] = useState<boolean>(false);
+  const [isAdminView, setIsAdminView] = useState<boolean>(() => isAdminHash());
   const [services, setServices] = useState<Service[]>(() => getStoredServices());
   const [bookings, setBookings] = useState<Booking[]>(() => getStoredBookings());
-  const [targetDate] = useState<string>('2026-09-25');
+  const [targetDate] = useState<string>(() => todayLocalISO());
   const [preselectedServiceId, setPreselectedServiceId] = useState<string | undefined>(undefined);
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<ServiceCategory | 'all'>('all');
+  const [pickerReopened, setPickerReopened] = useState<boolean>(false);
 
   // Lookbook modal state
   const [isLookbookOpen, setIsLookbookOpen] = useState<boolean>(false);
+
+  // Định tuyến bằng hash: #/admin là trang quản lý, còn lại là trang chủ
+  useEffect(() => {
+    const onHash = () => setIsAdminView(isAdminHash());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+
+  const goHome = () => {
+    if (window.location.hash) window.location.hash = '';
+    else window.scrollTo({ top: 0 });
+    setIsAdminView(false);
+  };
 
   // Cập nhật lại bookings
   const refreshBookings = useCallback(() => {
@@ -41,13 +66,9 @@ export function App() {
 
   // Cuộn mượt đến phần đặt lịch
   const handleScrollToBooking = () => {
+    if (window.location.hash) window.location.hash = '';
     setIsAdminView(false);
-    setTimeout(() => {
-      const el = document.getElementById('booking-section');
-      if (el) {
-        el.scrollIntoView({ behavior: 'smooth' });
-      }
-    }, 100);
+    setTimeout(() => scrollToTarget(document.getElementById('booking-section')), 100);
   };
 
   // Chọn từ Showcase
@@ -65,37 +86,30 @@ export function App() {
   // Lọc category từ Hero
   const handleSelectCategoryFromHero = (cat: 'nail' | 'headspa') => {
     setSelectedCategoryFilter(cat);
-    const el = document.getElementById('services-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+    scrollToTarget(document.getElementById('services-section'));
   };
 
   return (
     <div className="app-layout">
-      {/* Header Điều Hướng */}
       <Header
         isAdminView={isAdminView}
-        onToggleView={(isAdmin) => setIsAdminView(isAdmin)}
         onScrollToBooking={handleScrollToBooking}
+        onGoHome={goHome}
+        onOpenModePicker={() => setPickerReopened(true)}
       />
 
-      {/* NỘI DUNG CHÍNH */}
       {isAdminView ? (
-        /* GIAO DIỆN CHỦ TIỆM: CALENDAR + REMINDER + QUẢN LÝ DỊCH VỤ */
         <main>
           <AdminDashboard
             services={services}
             allBookings={bookings}
             onDataChanged={refreshBookings}
             onServicesChanged={(updated) => setServices(updated)}
-            onExitAdmin={() => setIsAdminView(false)}
+            onExitAdmin={goHome}
           />
         </main>
       ) : (
-        /* GIAO DIỆN LANDING PAGE NAIL & GỘI ĐẦU DƯỠNG SINH */
         <main>
-          {/* Banner Hero Bento Grid */}
           <Hero
             onStartBooking={handleScrollToBooking}
             onOpenLookbook={() => setIsLookbookOpen(true)}
@@ -104,7 +118,6 @@ export function App() {
 
           <FeatureStrip />
 
-          {/* Menu Dịch Vụ & Ảnh Mẫu Thực Tế */}
           <div id="services-section">
             <ServicesShowcase
               services={services}
@@ -114,16 +127,15 @@ export function App() {
             />
           </div>
 
-          {/* Bộ Đặt Lịch Thông Minh */}
           <section id="booking-section" className="booking-section">
             <div className="container">
               <div className="section-header">
-                <span className="section-tag">Hệ Thống Đặt Chỗ Thông Minh</span>
+                <span className="section-tag">Đặt lịch</span>
                 <h2 className="section-title">
-                  Đặt Lịch Nail & <span className="emerald-gradient-text">Gội Đầu Dưỡng Sinh</span>
+                  Chọn giờ đẹp, <span className="emerald-gradient-text">mình giữ chỗ cho bạn</span>
                 </h2>
                 <p className="section-desc">
-                  Tự do kết hợp các dịch vụ yêu thích. Hệ thống tự động tính toán tổng thời gian và bảo vệ lịch hẹn của bạn tuyệt đối.
+                  Chọn dịch vụ, chọn giờ và để lại số điện thoại, chỉ mất chưa đến một phút.
                 </p>
               </div>
 
@@ -142,15 +154,20 @@ export function App() {
         </main>
       )}
 
-      {/* Lookbook Modal Thư Viện Ảnh Mẫu */}
       <LookbookModal
         isOpen={isLookbookOpen}
         onClose={() => setIsLookbookOpen(false)}
         onSelectLookbookService={handleSelectFromLookbook}
       />
 
-      {/* Footer */}
       <Footer />
+
+      {!isAdminView && (
+        <>
+          <ModePicker reopened={pickerReopened} onClose={() => setPickerReopened(false)} />
+          <ZaloFab />
+        </>
+      )}
     </div>
   );
 }
