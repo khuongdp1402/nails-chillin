@@ -378,18 +378,17 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     );
   };
 
-  const fillPct = currentStep === 1 ? 33 : currentStep === 2 ? 66 : 100;
   const bodyClass = `bk-body ${leaving ? 'is-leaving' : ''}`;
 
   return (
     <div id="booking-wizard-container" ref={containerRef} className="bk-panel">
       <div className="bk-progress" aria-label={`Bước ${currentStep} trên 3`}>
-        <div className="bk-progress-track">
-          <div className="bk-progress-fill" style={{ width: `${fillPct}%` }} />
-        </div>
-        <div className="bk-progress-labels">
+        <div className="bk-progress-pills">
           {STEP_LABELS.map((l, i) => (
-            <span key={l} className={currentStep >= i + 1 ? 'is-on' : ''}>
+            <span
+              key={l}
+              className={`bk-pill ${currentStep >= i + 1 ? 'is-on' : ''} ${currentStep === i + 1 ? 'is-current' : ''}`}
+            >
               {i + 1}. {l}
             </span>
           ))}

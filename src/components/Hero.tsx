@@ -9,6 +9,7 @@ import { useMode } from '../context/ModeContext';
 import type { ServiceMode } from '../context/ModeContext';
 import { SITE, zaloLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
+import { WaveDivider } from './WaveDivider';
 
 interface HeroProps {
   onStartBooking: () => void;
@@ -19,7 +20,7 @@ const COLLAGE_PHOTOS: { src: string; alt: string; className: string }[] = [
   {
     src: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80',
     alt: 'Bộ nail sơn gel nghệ thuật',
-    className: 'hx-photo hx-photo-1',
+    className: 'hx-photo hx-photo-1', // tall arch
   },
   {
     src: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80',
@@ -106,7 +107,7 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="hx-orb hx-orb-a" aria-hidden="true" />
       <div className="hx-orb hx-orb-b" aria-hidden="true" />
 
-      <div className="container hx-container hx-grid">
+      <div className="hx-wide hx-grid">
         <div className={`hx-copy ${revealed ? 'is-revealed' : ''}`}>
           <span className="hx-eyebrow">
             <Sparkles size={14} />
@@ -177,6 +178,8 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
         </div>
       </div>
+
+      <WaveDivider variant={1} color="var(--bg-main)" className="hx-hero-wave" />
     </section>
   );
 };
