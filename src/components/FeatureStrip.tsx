@@ -1,27 +1,41 @@
+import '../styles/hero.css';
 import React from 'react';
-import { Sparkles, Gem, TrendingUp, Heart } from 'lucide-react';
+import { Sparkles, ShieldCheck, Timer, Heart } from 'lucide-react';
+import { useReveal } from '../hooks/useReveal';
 
 const FEATURES = [
-  { icon: Sparkles, title: 'Thiết Kế Hoàn Mỹ', desc: 'Mẫu nail được thiết kế riêng cho bạn.' },
-  { icon: Gem, title: 'Chất Lượng Cao Cấp', desc: 'Sản phẩm tốt nhất cho móng khỏe đẹp.' },
-  { icon: TrendingUp, title: 'Xu Hướng Mới Nhất', desc: 'Luôn cập nhật phong cách thịnh hành.' },
-  { icon: Heart, title: 'Yêu Thương Bản Thân', desc: 'Vì bạn xứng đáng được chăm sóc.' },
+  { icon: ShieldCheck, title: 'Tiệt trùng mỗi khách', desc: 'Dụng cụ được tiệt trùng trước khi dùng cho bạn.' },
+  { icon: Sparkles, title: 'Sơn bền 3–4 tuần', desc: 'Gel chuẩn, ít bong tróc, giữ màu đẹp lâu.' },
+  { icon: Timer, title: 'Đúng giờ hẹn', desc: 'Bạn đặt khung giờ nào, tiệm giữ chỗ đúng khung giờ đó.' },
+  { icon: Heart, title: 'Nhẹ nhàng, không ép mua', desc: 'Tư vấn thật lòng, chọn mẫu hợp với tay bạn.' },
 ];
+
+const FeatureItem: React.FC<{ index: number } & (typeof FEATURES)[number]> = ({
+  index,
+  icon: Icon,
+  title,
+  desc,
+}) => {
+  const ref = useReveal<HTMLDivElement>(index * 80);
+  return (
+    <div ref={ref} className="hx-feature">
+      <div className="hx-feature-icon">
+        <Icon size={22} />
+      </div>
+      <div>
+        <h4 className="hx-feature-title">{title}</h4>
+        <p className="hx-feature-desc">{desc}</p>
+      </div>
+    </div>
+  );
+};
 
 export const FeatureStrip: React.FC = () => {
   return (
-    <section className="feature-strip">
-      <div className="container feature-strip-grid">
-        {FEATURES.map(({ icon: Icon, title, desc }) => (
-          <div key={title} className="feature-item">
-            <div className="feature-icon-badge">
-              <Icon size={22} />
-            </div>
-            <div>
-              <h4 className="feature-title">{title}</h4>
-              <p className="feature-desc">{desc}</p>
-            </div>
-          </div>
+    <section className="hx-features">
+      <div className="container hx-container hx-features-grid">
+        {FEATURES.map((f, i) => (
+          <FeatureItem key={f.title} index={i} {...f} />
         ))}
       </div>
     </section>
