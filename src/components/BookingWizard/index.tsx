@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import '../../styles/booking.css';
+import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { Service, Booking } from '../../types';
 import {
   formatDuration,
@@ -8,10 +9,10 @@ import {
   getServiceNames,
 } from '../../utils/scheduler';
 import { attemptCreateBooking } from '../../utils/storage';
-import {
-  generateGoogleCalendarUrl,
-  downloadIcsFile,
-} from '../../utils/calendar';
+import { generateGoogleCalendarUrl, downloadIcsFile } from '../../utils/calendar';
+import { useMode } from '../../context/ModeContext';
+import { zaloLink, SITE } from '../../data/site';
+import { scrollToTarget } from '../../utils/scroll';
 import confetti from 'canvas-confetti';
 import {
   Calendar,
@@ -22,12 +23,11 @@ import {
   AlertCircle,
   ChevronRight,
   ChevronLeft,
-  Sparkles,
-  ShieldCheck,
   Check,
   CalendarPlus,
   Download,
   Images,
+  MessageCircle,
 } from 'lucide-react';
 
 interface BookingWizardProps {
@@ -39,6 +39,27 @@ interface BookingWizardProps {
   onOpenLookbook: () => void;
 }
 
+const pad = (n: number) => String(n).padStart(2, '0');
+
+function toIso(d: Date): string {
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+function addDays(d: Date, n: number): Date {
+  const c = new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+  return c;
+}
+
+function formatDateVi(iso: string): string {
+  const [y, m, d] = iso.split('-');
+  return `${d}/${m}/${y}`;
+}
+
+const prefersReduced = () =>
+  typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const STEP_LABELS = ['Dịch vụ', 'Giờ hẹn', 'Xong'];
+
 export const BookingWizard: React.FC<BookingWizardProps> = ({
   services,
   allBookings,
@@ -47,109 +68,172 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   preselectedServiceId,
   onOpenLookbook,
 }) => {
+  const { showsCategory } = useMode();
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [leaving, setLeaving] = useState(false);
 
-  // Form inputs
-  const [customerName, setCustomerName] = useState<string>('');
-  const [phone, setPhone] = useState<string>('');
-  const [date, setDate] = useState<string>(targetDate || '2026-09-25');
+  const [customerName, setCustomerName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [date, setDate] = useState<string>(() => targetDate || toIso(new Date()));
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(
-    preselectedServiceId ? [preselectedServiceId] : ['son-gel-thach', 'goi-duong-sinh-bo-ket']
+    preselectedServiceId ? [preselectedServiceId] : []
   );
   const [selectedStartTime, setSelectedStartTime] = useState<string | null>(null);
 
-  // Alerts & created result
   const [concurrencyAlert, setConcurrencyAlert] = useState<string | null>(null);
   const [lastCreatedBooking, setLastCreatedBooking] = useState<Booking | null>(null);
   const [formErrors, setFormErrors] = useState<{ [key: string]: string }>({});
+  const [step1Error, setStep1Error] = useState<string | null>(null);
+
+  // "Bây giờ" cập nhật mỗi phút để giờ đã qua tự khóa
+  const [now, setNow] = useState<Date>(() => new Date());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 60000);
+    return () => window.clearInterval(t);
+  }, []);
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const headingRef = useRef<HTMLHeadingElement>(null);
+  const firstRender = useRef(true);
 
   useEffect(() => {
-    if (targetDate) {
-      setDate(targetDate);
-    }
+    if (targetDate) setDate(targetDate);
   }, [targetDate]);
 
   useEffect(() => {
-    if (preselectedServiceId && !selectedServiceIds.includes(preselectedServiceId)) {
-      setSelectedServiceIds((prev) => [...prev, preselectedServiceId]);
+    if (preselectedServiceId) {
+      setSelectedServiceIds((prev) =>
+        prev.includes(preselectedServiceId) ? prev : [...prev, preselectedServiceId]
+      );
+      setStep1Error(null);
     }
   }, [preselectedServiceId]);
 
-  // Tổng thời gian (phút)
-  const totalDurationMinutes = useMemo(() => {
-    return selectedServiceIds.reduce((total, id) => {
-      const s = services.find((srv) => srv.id === id);
-      return total + (s ? s.durationMinutes : 0);
-    }, 0);
-  }, [selectedServiceIds, services]);
+  // Sau mỗi lần đổi bước: cuộn lên đầu wizard và focus tiêu đề
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return;
+    }
+    scrollToTarget(containerRef.current);
+    headingRef.current?.focus({ preventScroll: true });
+  }, [currentStep]);
 
-  // Tổng giá tiền (VND)
-  const totalPrice = useMemo(() => {
-    return selectedServiceIds.reduce((total, id) => {
-      const s = services.find((srv) => srv.id === id);
-      return total + (s ? s.price : 0);
-    }, 0);
-  }, [selectedServiceIds, services]);
+  const goToStep = useCallback((step: number) => {
+    if (prefersReduced()) {
+      setCurrentStep(step);
+      return;
+    }
+    setLeaving(true);
+    window.setTimeout(() => {
+      setCurrentStep(step);
+      setLeaving(false);
+    }, 180);
+  }, []);
 
-  // Khung giờ khả dụng & khóa
+  const visibleServices = useMemo(
+    () => services.filter((s) => showsCategory(s.category)),
+    [services, showsCategory]
+  );
+  const nailServices = visibleServices.filter((s) => s.category === 'nail');
+  const headspaServices = visibleServices.filter((s) => s.category === 'headspa');
+
+  // Chỉ tính những dịch vụ đang hiển thị theo chế độ
+  const activeIds = useMemo(
+    () => selectedServiceIds.filter((id) => visibleServices.some((s) => s.id === id)),
+    [selectedServiceIds, visibleServices]
+  );
+
+  const totalDurationMinutes = useMemo(
+    () => activeIds.reduce((t, id) => t + (services.find((s) => s.id === id)?.durationMinutes ?? 0), 0),
+    [activeIds, services]
+  );
+  const totalPrice = useMemo(
+    () => activeIds.reduce((t, id) => t + (services.find((s) => s.id === id)?.price ?? 0), 0),
+    [activeIds, services]
+  );
+
+  const todayIso = toIso(now);
+  const tomorrowIso = toIso(addDays(now, 1));
+  const weekendIso = useMemo(() => {
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diff = (6 - d.getDay() + 7) % 7 || 7;
+    return toIso(addDays(d, d.getDay() === 6 ? 1 : diff));
+  }, [now]);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
   const availableSlots = useMemo(() => {
-    return generateAvailableSlots(date, totalDurationMinutes, allBookings);
-  }, [date, totalDurationMinutes, allBookings]);
+    const base = generateAvailableSlots(date, totalDurationMinutes, allBookings);
+    if (date !== todayIso) return base;
+    return base.map((s) =>
+      timeToMinutes(s.timeStr) <= nowMinutes
+        ? { ...s, isAvailable: false, conflictReason: 'Đã qua giờ' }
+        : s
+    );
+  }, [date, todayIso, nowMinutes, totalDurationMinutes, allBookings]);
 
   useEffect(() => {
     if (selectedStartTime) {
-      const foundSlot = availableSlots.find((s) => s.timeStr === selectedStartTime);
-      if (!foundSlot || !foundSlot.isAvailable) {
-        setSelectedStartTime(null);
-      }
+      const found = availableSlots.find((s) => s.timeStr === selectedStartTime);
+      if (!found || !found.isAvailable) setSelectedStartTime(null);
     }
   }, [availableSlots, selectedStartTime]);
 
-  const handleToggleService = (serviceId: string) => {
+  const anySlotFree = availableSlots.some((s) => s.isAvailable);
+
+  const calculatedEndTime = useMemo(() => {
+    if (!selectedStartTime || totalDurationMinutes <= 0) return null;
+    return minutesToTime(timeToMinutes(selectedStartTime) + totalDurationMinutes);
+  }, [selectedStartTime, totalDurationMinutes]);
+
+  const handleToggleService = (id: string) => {
     setConcurrencyAlert(null);
-    setSelectedServiceIds((prev) => {
-      if (prev.includes(serviceId)) {
-        return prev.filter((id) => id !== serviceId);
-      } else {
-        return [...prev, serviceId];
+    setStep1Error(null);
+    setSelectedServiceIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+  };
+
+  const handleProceedToStep2 = () => {
+    if (activeIds.length === 0) {
+      setStep1Error('Bạn chọn ít nhất 1 dịch vụ để tiếp tục nhé.');
+      return;
+    }
+    setConcurrencyAlert(null);
+    goToStep(2);
+  };
+
+  const scrollToField = (id: string) => {
+    window.requestAnimationFrame(() => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      scrollToTarget(el, { extraOffset: 40 });
+      if (el instanceof HTMLInputElement || el instanceof HTMLButtonElement) {
+        el.focus({ preventScroll: true });
       }
     });
   };
 
-  const handleProceedToStep2 = () => {
-    if (selectedServiceIds.length === 0) {
-      alert('Vui lòng chọn ít nhất 1 dịch vụ để tiếp tục!');
-      return;
-    }
-    setConcurrencyAlert(null);
-    setCurrentStep(2);
-  };
-
-  const calculatedEndTime = useMemo(() => {
-    if (!selectedStartTime || totalDurationMinutes <= 0) return null;
-    const startMin = timeToMinutes(selectedStartTime);
-    return minutesToTime(startMin + totalDurationMinutes);
-  }, [selectedStartTime, totalDurationMinutes]);
-
   const handleConfirmBooking = () => {
     const errors: { [key: string]: string } = {};
-    if (!customerName.trim()) {
-      errors.customerName = 'Vui lòng nhập họ và tên của bạn';
-    }
+    if (!customerName.trim()) errors.customerName = 'Bạn cho mình biết tên nhé.';
     if (!phone.trim()) {
-      errors.phone = 'Vui lòng nhập số điện thoại';
-    } else if (!/(0[3|5|7|8|9])+([0-9]{8})\b/.test(phone.replace(/\s+/g, ''))) {
-      errors.phone = 'Số điện thoại không hợp lệ (Ví dụ: 0901234567)';
+      errors.phone = 'Bạn nhập số điện thoại để tiệm liên hệ nhé.';
+    } else if (!/^0[3|5|7|8|9][0-9]{8}$/.test(phone.replace(/\s+/g, ''))) {
+      errors.phone = 'Số điện thoại gồm 10 số, ví dụ 0901234567.';
     }
-    if (!date) {
-      errors.date = 'Vui lòng chọn ngày làm đẹp';
-    }
-    if (!selectedStartTime || !calculatedEndTime) {
-      errors.slot = 'Vui lòng chọn một khung giờ hợp lệ';
-    }
+    if (!date) errors.date = 'Bạn chọn ngày hẹn nhé.';
+    else if (date < todayIso) errors.date = 'Ngày này đã qua, bạn chọn hôm nay hoặc ngày sau nhé.';
+    if (!selectedStartTime || !calculatedEndTime) errors.slot = 'Bạn chọn một giờ hẹn nhé.';
 
     if (Object.keys(errors).length > 0) {
       setFormErrors(errors);
+      const firstId = errors.customerName
+        ? 'bk-name'
+        : errors.phone
+        ? 'bk-phone'
+        : errors.date
+        ? 'bk-date'
+        : 'bk-slots';
+      scrollToField(firstId);
       return;
     }
     setFormErrors({});
@@ -161,14 +245,15 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       date,
       startTime: selectedStartTime as string,
       endTime: calculatedEndTime as string,
-      serviceIds: selectedServiceIds,
+      serviceIds: activeIds,
       totalMinutes: totalDurationMinutes,
       totalPrice,
-      note: 'Đặt online qua Landing Page Nail & Gội Đầu Dưỡng Sinh',
+      staffId: 'owner',
+      note: 'Đặt online trên website',
     });
 
     if (!result.success) {
-      setConcurrencyAlert(result.error || 'Khung giờ này vừa có người đặt. Vui lòng chọn khung giờ khác.');
+      setConcurrencyAlert(result.error || 'Giờ này vừa có bạn khác đặt. Bạn chọn giờ khác giúp mình nhé.');
       setSelectedStartTime(null);
       return;
     }
@@ -182,7 +267,8 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
           particleCount: 90,
           spread: 80,
           origin: { y: 0.6 },
-          colors: ['#d98a94', '#d4a373', '#fffaf8', '#3c2321'],
+          colors: ['#e23e68', '#b3123b', '#ffe9ef', '#c9963a', '#ffffff'],
+          disableForReducedMotion: true,
         });
       } catch (err) {
         console.log('Confetti effect:', err);
@@ -193,507 +279,366 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const handleResetForNewBooking = () => {
     setSelectedStartTime(null);
     setLastCreatedBooking(null);
-    setCurrentStep(1);
     setConcurrencyAlert(null);
+    setDate(toIso(new Date()));
+    goToStep(1);
   };
 
-  // Tách dịch vụ theo 2 module
-  const nailServices = services.filter((s) => s.category === 'nail');
-  const headspaServices = services.filter((s) => s.category === 'headspa');
+  const zaloMessage = (b: Booking) =>
+    `Chào tiệm, mình là ${b.customerName}. Mình đã đặt lịch ${b.startTime} – ${b.endTime} ngày ${formatDateVi(
+      b.date
+    )}, dịch vụ: ${getServiceNames(b.serviceIds, services)}. Nhờ tiệm xác nhận giúp mình nhé.`;
+
+  const renderService = (service: Service) => {
+    const isSelected = activeIds.includes(service.id);
+    return (
+      <button
+        key={service.id}
+        type="button"
+        aria-pressed={isSelected}
+        className={`bk-svc ${isSelected ? 'is-selected' : ''}`}
+        onClick={() => handleToggleService(service.id)}
+      >
+        <span className="bk-svc-inner">
+          <span className="bk-svc-img">
+            <img src={service.imageUrl} alt={service.name} loading="lazy" />
+            <span className="bk-check" aria-hidden="true">
+              <Check size={14} strokeWidth={3} />
+            </span>
+          </span>
+          <span className="bk-svc-info">
+            <span className="bk-svc-name">{service.name}</span>
+            <span className="bk-svc-meta">
+              <span className="bk-dur">
+                <Clock size={11} />
+                {formatDuration(service.durationMinutes)}
+              </span>
+              <span className="price">{service.price.toLocaleString('vi-VN')}đ</span>
+            </span>
+          </span>
+        </span>
+      </button>
+    );
+  };
+
+  const fillPct = currentStep === 1 ? 33 : currentStep === 2 ? 66 : 100;
+  const bodyClass = `bk-body ${leaving ? 'is-leaving' : ''}`;
 
   return (
-    <div id="booking-wizard-container" className="glass-panel" style={{ position: 'relative' }}>
-      {/* Wizard Step Navigation */}
-      <div className="wizard-steps">
-        <div className={`step-indicator ${currentStep === 1 ? 'active' : currentStep > 1 ? 'completed' : ''}`}>
-          <div className="step-bubble">{currentStep > 1 ? <Check size={18} /> : '1'}</div>
-          <span className="step-title">Chọn dịch vụ</span>
+    <div id="booking-wizard-container" ref={containerRef} className="bk-panel">
+      <div className="bk-progress" aria-label={`Bước ${currentStep} trên 3`}>
+        <div className="bk-progress-track">
+          <div className="bk-progress-fill" style={{ width: `${fillPct}%` }} />
         </div>
-
-        <div className={`step-indicator ${currentStep === 2 ? 'active' : currentStep > 2 ? 'completed' : ''}`}>
-          <div className="step-bubble">{currentStep > 2 ? <Check size={18} /> : '2'}</div>
-          <span className="step-title">Thông tin & Giờ hẹn</span>
-        </div>
-
-        <div className={`step-indicator ${currentStep === 3 ? 'active' : ''}`}>
-          <div className="step-bubble">3</div>
-          <span className="step-title">Hoàn tất</span>
+        <div className="bk-progress-labels">
+          {STEP_LABELS.map((l, i) => (
+            <span key={l} className={currentStep >= i + 1 ? 'is-on' : ''}>
+              {i + 1}. {l}
+            </span>
+          ))}
         </div>
       </div>
 
-      {/* Cảnh báo xung đột nếu khung giờ bị chiếm */}
       {concurrencyAlert && (
-        <div
-          style={{
-            background: 'var(--accent-red-bg)',
-            border: '1px dashed var(--accent-red)',
-            borderRadius: 'var(--radius-sm)',
-            padding: '14px 18px',
-            marginBottom: '24px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            color: 'var(--text-main)',
-          }}
-        >
-          <AlertCircle size={22} color="var(--accent-red)" style={{ flexShrink: 0 }} />
+        <div className="bk-alert" role="alert">
+          <AlertCircle size={20} color="var(--accent-red)" style={{ flexShrink: 0 }} />
           <div>
-            <strong style={{ display: 'block', fontSize: '0.95rem' }}>Đặt lịch không thành công</strong>
-            <span style={{ fontSize: '0.88rem' }}>{concurrencyAlert}</span>
+            <strong>Chưa đặt được lịch</strong>
+            {concurrencyAlert}
           </div>
         </div>
       )}
 
-      {/* BƯỚC 1: CHỌN DỊCH VỤ VỚI 2 MODULE NAIL & GỘI ĐẦU */}
+      {/* BƯỚC 1 */}
       {currentStep === 1 && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
-            <div>
-              <h3 style={{ fontSize: '1.4rem', marginBottom: '6px' }}>
-                Bước 1: Chọn Dịch Vụ Nail & Dưỡng Sinh
+        <div key="step1" className={bodyClass}>
+          <div className="step-enter">
+            <div className="bk-head bk-head-row">
+              <div>
+                <h3 className="bk-title" tabIndex={-1} ref={headingRef}>
+                  Bạn muốn làm gì hôm nay?
+                </h3>
+                <p className="bk-sub">Chọn một hoặc nhiều dịch vụ, tiệm tự cộng thời gian và giá cho bạn.</p>
+              </div>
+              <button type="button" className="bk-link-btn" onClick={onOpenLookbook}>
+                <Images size={15} />
+                Xem mẫu
+              </button>
+            </div>
+
+            {visibleServices.length === 0 && (
+              <div className="bk-empty">Hiện chưa có dịch vụ nào trong mục này. Bạn nhắn Zalo cho tiệm để được tư vấn nhé.</div>
+            )}
+
+            {nailServices.length > 0 && (
+              <div className="bk-group">
+                {headspaServices.length > 0 && <h4 className="bk-group-title">Làm nail</h4>}
+                <div className="bk-grid">{nailServices.map(renderService)}</div>
+              </div>
+            )}
+            {headspaServices.length > 0 && (
+              <div className="bk-group">
+                {nailServices.length > 0 && <h4 className="bk-group-title">Gội đầu dưỡng sinh</h4>}
+                <div className="bk-grid">{headspaServices.map(renderService)}</div>
+              </div>
+            )}
+
+            <div className="bk-total">
+              <span>
+                <b>{activeIds.length}</b> dịch vụ · <b>{formatDuration(totalDurationMinutes)}</b>
+              </span>
+              <span className="price">{totalPrice.toLocaleString('vi-VN')}đ</span>
+            </div>
+            {step1Error && <span className="bk-err" role="alert" style={{ marginBottom: 10 }}>{step1Error}</span>}
+
+            <div className="bk-nav" style={{ justifyContent: 'flex-end' }}>
+              <button type="button" className="btn btn-primary" onClick={handleProceedToStep2}>
+                <span>Chọn ngày giờ</span>
+                <ChevronRight size={18} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BƯỚC 2 */}
+      {currentStep === 2 && (
+        <div key="step2" className={bodyClass}>
+          <div className="step-enter">
+            <div className="bk-head">
+              <h3 className="bk-title" tabIndex={-1} ref={headingRef}>
+                Cho tiệm biết bạn là ai và đến lúc nào
               </h3>
-              <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem' }}>
-                Bạn có thể kết hợp cả làm Nail lẫn Gội đầu dưỡng sinh trong cùng 1 lần đặt. Hệ thống sẽ tự động cộng dồn thời gian.
+              <p className="bk-sub">
+                Tiệm mở {SITE.hours} — bạn chọn giờ bắt đầu, tiệm giữ trọn {formatDuration(totalDurationMinutes)} cho bạn.
               </p>
             </div>
 
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{ fontSize: '0.82rem', padding: '6px 14px' }}
-              onClick={onOpenLookbook}
-            >
-              <Images size={15} color="var(--accent-gold)" />
-              <span>Xem Lookbook Mẫu Ảnh</span>
-            </button>
-          </div>
-
-          {/* Thanh tổng thời gian và giá */}
-          <div className="booking-summary-bar">
-            <div>
-              <span className="summary-item-label">Dịch vụ đã chọn</span>
-              <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.95rem' }}>
-                {selectedServiceIds.length > 0
-                  ? `${selectedServiceIds.length} dịch vụ đã chọn`
-                  : 'Chưa chọn dịch vụ nào'}
+            <div className="bk-fields">
+              <div className="bk-field">
+                <label className="bk-label" htmlFor="bk-name">
+                  <User size={13} /> Tên của bạn
+                </label>
+                <input
+                  id="bk-name"
+                  type="text"
+                  autoComplete="name"
+                  className={`bk-input ${formErrors.customerName ? 'is-invalid' : ''}`}
+                  placeholder="Ví dụ: Nguyễn Thị Mai"
+                  value={customerName}
+                  onChange={(e) => setCustomerName(e.target.value)}
+                />
+                {formErrors.customerName && <span className="bk-err">{formErrors.customerName}</span>}
+              </div>
+              <div className="bk-field">
+                <label className="bk-label" htmlFor="bk-phone">
+                  <Phone size={13} /> Số điện thoại
+                </label>
+                <input
+                  id="bk-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
+                  className={`bk-input ${formErrors.phone ? 'is-invalid' : ''}`}
+                  placeholder="Ví dụ: 0901234567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+                {formErrors.phone && <span className="bk-err">{formErrors.phone}</span>}
               </div>
             </div>
 
-            <div>
-              <span className="summary-item-label">Tổng thời gian làm</span>
-              <div className="summary-item-val">
-                ⏱ {formatDuration(totalDurationMinutes)}
-              </div>
-            </div>
-
-            <div>
-              <span className="summary-item-label">Tổng chi phí dự kiến</span>
-              <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-rose)' }}>
-                {totalPrice.toLocaleString('vi-VN')} đ
-              </div>
-            </div>
-          </div>
-
-          {/* NHÓM 1: LÀM MÓNG NGHỆ THUẬT */}
-          <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ color: 'var(--accent-gold)', fontSize: '1.05rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>💅 Gói Dịch Vụ Làm Móng Nghệ Thuật (Nail Art)</span>
-            </h4>
-            <div className="services-grid">
-              {nailServices.map((service) => {
-                const isSelected = selectedServiceIds.includes(service.id);
-                return (
-                  <div
-                    key={service.id}
-                    className={`service-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleToggleService(service.id)}
-                  >
-                    <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-                      <img
-                        src={service.imageUrl}
-                        alt={service.name}
-                        style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <h5 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                            {service.name}
-                          </h5>
-                          <div className="checkbox-custom">
-                            {isSelected && <Check size={14} strokeWidth={3} />}
-                          </div>
-                        </div>
-                        <span className="service-badge-duration" style={{ marginTop: '4px' }}>
-                          <Clock size={11} />
-                          <span>{formatDuration(service.durationMinutes)}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="service-card-footer" style={{ marginTop: '8px' }}>
-                      <span className="service-price" style={{ fontSize: '0.98rem' }}>
-                        {service.price.toLocaleString('vi-VN')} đ
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* NHÓM 2: GỘI ĐẦU DƯỠNG SINH THẢO DƯỢC */}
-          <div style={{ marginBottom: '24px' }}>
-            <h4 style={{ color: 'var(--accent-emerald)', fontSize: '1.05rem', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span>🌿 Gói Dịch Vụ Gội Đầu Dưỡng Sinh & Spa Thảo Dược</span>
-            </h4>
-            <div className="services-grid">
-              {headspaServices.map((service) => {
-                const isSelected = selectedServiceIds.includes(service.id);
-                return (
-                  <div
-                    key={service.id}
-                    className={`service-card ${isSelected ? 'selected' : ''}`}
-                    onClick={() => handleToggleService(service.id)}
-                  >
-                    <div style={{ display: 'flex', gap: '12px', marginBottom: '8px' }}>
-                      <img
-                        src={service.imageUrl}
-                        alt={service.name}
-                        style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', flexShrink: 0 }}
-                      />
-                      <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                          <h5 style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                            {service.name}
-                          </h5>
-                          <div className="checkbox-custom">
-                            {isSelected && <Check size={14} strokeWidth={3} />}
-                          </div>
-                        </div>
-                        <span className="service-badge-duration" style={{ marginTop: '4px' }}>
-                          <Clock size={11} />
-                          <span>{formatDuration(service.durationMinutes)}</span>
-                        </span>
-                      </div>
-                    </div>
-
-                    <div className="service-card-footer" style={{ marginTop: '8px' }}>
-                      <span className="service-price" style={{ color: 'var(--accent-emerald)', fontSize: '0.98rem' }}>
-                        {service.price.toLocaleString('vi-VN')} đ
-                      </span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          <div className="wizard-nav" style={{ justifyContent: 'flex-end' }}>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleProceedToStep2}
-              disabled={selectedServiceIds.length === 0}
-            >
-              <span>Tiếp Tục: Thông Tin & Giờ Hẹn ({formatDuration(totalDurationMinutes)})</span>
-              <ChevronRight size={18} />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* BƯỚC 2: THÔNG TIN KHÁCH, NGÀY HẸN & CHỌN KHUNG GIỜ */}
-      {currentStep === 2 && (
-        <div>
-          <div style={{ marginBottom: '24px' }}>
-            <h3 style={{ fontSize: '1.4rem', marginBottom: '8px' }}>
-              Bước 2: Thông Tin Khách Hàng & Khung Giờ Hẹn
-            </h3>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Vui lòng cung cấp số điện thoại chính xác để hệ thống gửi tin nhắn nhắc hẹn và tự động thêm vào lịch cá nhân của bạn.
-            </p>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
-            <div className="form-group">
-              <label className="form-label" htmlFor="customer-name">
-                <User size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                Họ và tên của bạn:
+            <div className="bk-field" style={{ marginBottom: 6 }}>
+              <label className="bk-label" htmlFor="bk-date">
+                <Calendar size={13} /> Ngày hẹn
               </label>
-              <input
-                id="customer-name"
-                type="text"
-                className="form-input"
-                placeholder="Ví dụ: Nguyễn Thị Mai"
-                value={customerName}
-                onChange={(e) => setCustomerName(e.target.value)}
-              />
-              {formErrors.customerName && (
-                <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                  {formErrors.customerName}
-                </span>
-              )}
+              <div className="bk-chips">
+                <button
+                  type="button"
+                  className={`bk-chip ${date === todayIso ? 'is-on' : ''}`}
+                  onClick={() => setDate(todayIso)}
+                >
+                  Hôm nay
+                </button>
+                <button
+                  type="button"
+                  className={`bk-chip ${date === tomorrowIso ? 'is-on' : ''}`}
+                  onClick={() => setDate(tomorrowIso)}
+                >
+                  Ngày mai
+                </button>
+                <button
+                  type="button"
+                  className={`bk-chip ${date === weekendIso ? 'is-on' : ''}`}
+                  onClick={() => setDate(weekendIso)}
+                >
+                  Cuối tuần
+                </button>
+                <input
+                  id="bk-date"
+                  type="date"
+                  className={`bk-input bk-date-input ${formErrors.date ? 'is-invalid' : ''}`}
+                  value={date}
+                  min={todayIso}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </div>
+              {formErrors.date && <span className="bk-err">{formErrors.date}</span>}
             </div>
 
-            <div className="form-group">
-              <label className="form-label" htmlFor="customer-phone">
-                <Phone size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-                Số điện thoại liên hệ:
-              </label>
-              <input
-                id="customer-phone"
-                type="tel"
-                className="form-input"
-                placeholder="Ví dụ: 0901234567"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-              />
-              {formErrors.phone && (
-                <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                  {formErrors.phone}
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label" htmlFor="booking-date">
-              <Calendar size={15} style={{ display: 'inline', marginRight: '6px', verticalAlign: 'middle' }} />
-              Chọn ngày hẹn làm đẹp:
+            <label className="bk-label" style={{ marginTop: 12 }}>
+              <Clock size={13} /> Giờ bắt đầu (giờ lớn) và giờ xong dự kiến (giờ nhỏ)
             </label>
-            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-              <input
-                id="booking-date"
-                type="date"
-                className="form-input"
-                style={{ maxWidth: '240px' }}
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                min="2026-01-01"
-              />
 
-              <button
-                type="button"
-                className={`date-pill-btn ${date === '2026-09-25' ? 'active' : ''}`}
-                onClick={() => setDate('2026-09-25')}
-              >
-                ★ Chọn ngày mẫu demo (25/09/2026)
+            {anySlotFree ? (
+              <div id="bk-slots" className="bk-slots" role="group" aria-label="Khung giờ hẹn">
+                {availableSlots.map((slot) => {
+                  const isSelected = selectedStartTime === slot.timeStr;
+                  return (
+                    <button
+                      key={slot.timeStr}
+                      type="button"
+                      disabled={!slot.isAvailable}
+                      aria-pressed={isSelected}
+                      title={slot.isAvailable ? undefined : slot.conflictReason || 'Đã có khách đặt'}
+                      className={`bk-slot ${isSelected ? 'is-selected' : ''}`}
+                      onClick={() => {
+                        setSelectedStartTime(slot.timeStr);
+                        setConcurrencyAlert(null);
+                        setFormErrors((p) => ({ ...p, slot: '' }));
+                      }}
+                    >
+                      {isSelected && <Check size={13} strokeWidth={3} className="bk-slot-tick" />}
+                      <span className="bk-slot-time">{slot.timeStr}</span>
+                      <span className="bk-slot-end">
+                        {slot.isAvailable
+                          ? `đến ${slot.endTimeStr}`
+                          : slot.conflictReason === 'Đã qua giờ'
+                          ? 'Đã qua giờ'
+                          : 'Hết chỗ'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div id="bk-slots" className="bk-empty">
+                Ngày này không còn giờ nào đủ {formatDuration(totalDurationMinutes)} cho các dịch vụ bạn chọn.
+                Bạn thử chọn ngày khác, hoặc bớt một dịch vụ để rút ngắn thời gian nhé.
+              </div>
+            )}
+            {formErrors.slot && <span className="bk-err" style={{ marginTop: -8, marginBottom: 12 }}>{formErrors.slot}</span>}
+
+            {selectedStartTime && calculatedEndTime ? (
+              <div className="bk-summary" aria-live="polite">
+                <span className="bk-summary-main">
+                  {selectedStartTime} – {calculatedEndTime} · {formatDuration(totalDurationMinutes)} ·{' '}
+                  <span className="price">{totalPrice.toLocaleString('vi-VN')}đ</span>
+                </span>
+                <span className="bk-summary-sub">
+                  {formatDateVi(date)} · {getServiceNames(activeIds, services)}
+                </span>
+              </div>
+            ) : (
+              <p className="bk-hint">Chọn một giờ để xem giờ xong và tổng tiền.</p>
+            )}
+
+            <div className="bk-nav">
+              <button type="button" className="btn btn-secondary" onClick={() => goToStep(1)}>
+                <ChevronLeft size={18} />
+                <span>Quay lại</span>
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleConfirmBooking}>
+                <CheckCircle size={18} />
+                <span>Xác nhận đặt lịch</span>
               </button>
             </div>
-            {formErrors.date && (
-              <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                {formErrors.date}
-              </span>
-            )}
-          </div>
-
-          <div style={{ marginBottom: '20px' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem' }}>
-              Ngày hẹn: <strong style={{ color: 'var(--accent-gold)' }}>{date}</strong>. Tổng thời lượng phục vụ:{' '}
-              <strong style={{ color: 'var(--accent-gold)' }}>{formatDuration(totalDurationMinutes)}</strong>.
-            </p>
-            {formErrors.slot && (
-              <span style={{ color: 'var(--accent-red)', fontSize: '0.78rem', marginTop: '4px', display: 'block' }}>
-                {formErrors.slot}
-              </span>
-            )}
-          </div>
-
-          <div className="slot-notice-box">
-            <ShieldCheck size={18} color="var(--accent-gold)" style={{ float: 'left', marginRight: '10px', marginTop: '2px' }} />
-            <div>
-              <strong>Quy tắc khóa giờ an toàn:</strong> Khi bạn chọn một khung giờ bắt đầu, hệ thống sẽ tự động khóa toàn bộ khoảng thời gian tương ứng với tổng thời lượng ({formatDuration(totalDurationMinutes)}). Những khung giờ bị trùng hoặc đè lên lịch đã có khách khác sẽ bị vô hiệu hóa hoàn toàn.
-            </div>
-          </div>
-
-          {/* Lưới khung giờ */}
-          <div className="slots-grid">
-            {availableSlots.map((slot) => {
-              const isSelected = selectedStartTime === slot.timeStr;
-              return (
-                <button
-                  key={slot.timeStr}
-                  type="button"
-                  disabled={!slot.isAvailable}
-                  data-reason={slot.conflictReason || 'Đã có khách đặt'}
-                  className={`slot-btn ${slot.isAvailable ? 'available' : 'disabled'} ${isSelected ? 'selected' : ''}`}
-                  onClick={() => {
-                    if (slot.isAvailable) {
-                      setSelectedStartTime(slot.timeStr);
-                      setConcurrencyAlert(null);
-                    }
-                  }}
-                >
-                  <span className="slot-time">{slot.timeStr}</span>
-                  <span className="slot-end">
-                    {slot.isAvailable ? `đến ${slot.endTimeStr}` : '—'}
-                  </span>
-                  <span className="slot-status-tag">
-                    {slot.isAvailable ? 'Còn trống' : 'Đã có khách'}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Box tóm tắt */}
-          {selectedStartTime && calculatedEndTime && (
-            <div
-              style={{
-                background: 'var(--bg-surface)',
-                border: '1px solid var(--text-main)',
-                borderRadius: 'var(--radius-md)',
-                padding: '16px 20px',
-                marginBottom: '24px',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
-                <div>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-gold)', textTransform: 'uppercase' }}>
-                    Khung giờ bạn đang giữ chỗ:
-                  </span>
-                  <div style={{ fontSize: '1.25rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
-                    {selectedStartTime} – {calculatedEndTime} ({formatDuration(totalDurationMinutes)})
-                  </div>
-                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    Dịch vụ: {getServiceNames(selectedServiceIds, services)}
-                  </div>
-                </div>
-
-                <div style={{ textAlign: 'right' }}>
-                  <span style={{ fontSize: '0.8rem', color: 'var(--text-gold)' }}>Tạm tính:</span>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 700, color: 'var(--accent-rose)' }}>
-                    {totalPrice.toLocaleString('vi-VN')} đ
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <div className="wizard-nav">
-            <button
-              type="button"
-              className="btn btn-secondary"
-              onClick={() => setCurrentStep(1)}
-            >
-              <ChevronLeft size={18} />
-              <span>Quay Lại</span>
-            </button>
-
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleConfirmBooking}
-            >
-              <CheckCircle size={18} />
-              <span>Xác Nhận Đặt Lịch Ngay</span>
-            </button>
           </div>
         </div>
       )}
 
-      {/* BƯỚC 3: THÀNH CÔNG VỚI TÍCH HỢP GOOGLE CALENDAR & FILE .ICS */}
+      {/* BƯỚC 3 */}
       {currentStep === 3 && lastCreatedBooking && (
-        <div style={{ textAlign: 'center', padding: '20px 0' }}>
-          <div className="modal-icon-success">
-            <Sparkles size={36} color="var(--accent-emerald)" />
-          </div>
+        <div key="step3" className={bodyClass}>
+          <div className="step-enter bk-done">
+            <div className="bk-done-icon">
+              <Check size={32} strokeWidth={3} />
+            </div>
+            <h3 className="bk-title" tabIndex={-1} ref={headingRef} style={{ fontSize: '1.3rem' }}>
+              Đã giữ chỗ cho bạn rồi!
+            </h3>
+            <p className="bk-sub" style={{ maxWidth: 440, margin: '0 auto' }}>
+              Hẹn gặp {lastCreatedBooking.customerName} lúc {lastCreatedBooking.startTime} ngày{' '}
+              {formatDateVi(lastCreatedBooking.date)}. Bạn lưu vào lịch hoặc nhắn Zalo để tiệm xác nhận nhé.
+            </p>
 
-          <h3 style={{ fontSize: '1.8rem', marginBottom: '8px', color: 'var(--accent-gold)' }}>
-            Đặt Lịch Thành Công!
-          </h3>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.92rem', maxWidth: '500px', margin: '0 auto 24px' }}>
-            Hệ thống đã khóa trọn vẹn khung giờ này cho bạn. Bạn có thể lưu ngay vào lịch trên điện thoại hoặc Google Calendar để nhận thông báo nhắc nhở tự động.
-          </p>
-
-          <div className="modal-receipt" style={{ maxWidth: '520px', margin: '0 auto 24px' }}>
-            <div className="receipt-row">
-              <span className="receipt-label">Mã lịch hẹn:</span>
-              <span className="receipt-value" style={{ fontFamily: 'monospace', color: 'var(--accent-gold)' }}>
-                #{lastCreatedBooking.id.slice(-6).toUpperCase()}
-              </span>
+            <div className="bk-receipt">
+              <div className="bk-row">
+                <span>Mã lịch</span>
+                <span style={{ fontFamily: 'monospace' }}>#{lastCreatedBooking.id.slice(-6).toUpperCase()}</span>
+              </div>
+              <div className="bk-row">
+                <span>Khách</span>
+                <span>
+                  {lastCreatedBooking.customerName} · {lastCreatedBooking.phone}
+                </span>
+              </div>
+              <div className="bk-row">
+                <span>Ngày</span>
+                <span>{formatDateVi(lastCreatedBooking.date)}</span>
+              </div>
+              <div className="bk-row">
+                <span>Giờ làm</span>
+                <span>
+                  {lastCreatedBooking.startTime} – {lastCreatedBooking.endTime} ({formatDuration(lastCreatedBooking.totalMinutes)})
+                </span>
+              </div>
+              <div className="bk-row">
+                <span>Dịch vụ</span>
+                <span>{getServiceNames(lastCreatedBooking.serviceIds, services)}</span>
+              </div>
+              <div className="bk-row">
+                <span>Tạm tính</span>
+                <span className="price">{lastCreatedBooking.totalPrice.toLocaleString('vi-VN')}đ</span>
+              </div>
             </div>
 
-            <div className="receipt-row">
-              <span className="receipt-label">Khách hàng:</span>
-              <span className="receipt-value">{lastCreatedBooking.customerName}</span>
-            </div>
-
-            <div className="receipt-row">
-              <span className="receipt-label">Số điện thoại:</span>
-              <span className="receipt-value">{lastCreatedBooking.phone}</span>
-            </div>
-
-            <div className="receipt-row">
-              <span className="receipt-label">Ngày làm hẹn:</span>
-              <span className="receipt-value">{lastCreatedBooking.date}</span>
-            </div>
-
-            <div className="receipt-row">
-              <span className="receipt-label">Khung giờ thực hiện:</span>
-              <span className="receipt-value" style={{ color: 'var(--accent-gold)' }}>
-                {lastCreatedBooking.startTime} – {lastCreatedBooking.endTime}
-              </span>
-            </div>
-
-            <div className="receipt-row">
-              <span className="receipt-label">Dịch vụ đã chọn:</span>
-              <span className="receipt-value">
-                {getServiceNames(lastCreatedBooking.serviceIds, services)}
-              </span>
-            </div>
-
-            <div className="receipt-row">
-              <span className="receipt-label">Tổng thời gian:</span>
-              <span className="receipt-value">{formatDuration(lastCreatedBooking.totalMinutes)}</span>
-            </div>
-
-            <div className="receipt-row">
-              <span className="receipt-label">Tổng thanh toán dự kiến:</span>
-              <span className="receipt-value">{lastCreatedBooking.totalPrice.toLocaleString('vi-VN')} đ</span>
-            </div>
-          </div>
-
-          {/* TÍCH HỢP LỊCH GOOGLE CALENDAR & FILE .ICS */}
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '24px' }}>
-            <a
-              href={generateGoogleCalendarUrl(
-                lastCreatedBooking,
-                getServiceNames(lastCreatedBooking.serviceIds, services)
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-secondary"
-              style={{ fontSize: '0.85rem', padding: '10px 18px', border: '1px solid var(--accent-gold)' }}
-            >
-              <CalendarPlus size={16} color="var(--accent-gold)" />
-              <span>Thêm Vào Google Calendar</span>
-            </a>
-
-            <button
-              type="button"
-              className="btn btn-secondary"
-              style={{ fontSize: '0.85rem', padding: '10px 18px' }}
-              onClick={() =>
-                downloadIcsFile(
+            <div className="bk-actions">
+              <a
+                href={zaloLink(zaloMessage(lastCreatedBooking))}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn bk-zalo"
+              >
+                <MessageCircle size={16} />
+                <span>Nhắn Zalo cho tiệm</span>
+              </a>
+              <a
+                href={generateGoogleCalendarUrl(
                   lastCreatedBooking,
                   getServiceNames(lastCreatedBooking.serviceIds, services)
-                )
-              }
-            >
-              <Download size={16} />
-              <span>Tải File Lịch .ics (Điện Thoại / Apple)</span>
-            </button>
-          </div>
-
-          <div>
-            <button
-              type="button"
-              className="btn btn-primary"
-              onClick={handleResetForNewBooking}
-            >
-              <span>Đặt thêm một lịch hẹn mới</span>
-            </button>
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-secondary"
+              >
+                <CalendarPlus size={16} />
+                <span>Thêm vào Google Calendar</span>
+              </a>
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() =>
+                  downloadIcsFile(lastCreatedBooking, getServiceNames(lastCreatedBooking.serviceIds, services))
+                }
+              >
+                <Download size={16} />
+                <span>Tải file lịch</span>
+              </button>
+              <button type="button" className="btn btn-primary" onClick={handleResetForNewBooking}>
+                <span>Đặt thêm lịch</span>
+              </button>
+            </div>
           </div>
         </div>
       )}
