@@ -1,60 +1,65 @@
+import '../styles/hero.css';
 import React from 'react';
-import { MapPin, Phone, Clock, Sparkles } from 'lucide-react';
+import { MapPin, Phone, Clock, Sparkles, MessageCircle } from 'lucide-react';
+import { SITE, zaloLink } from '../data/site';
+import { useReveal } from '../hooks/useReveal';
 
 export const Footer: React.FC = () => {
+  const ref = useReveal<HTMLDivElement>();
   return (
-    <footer className="site-footer">
-      <div className="container">
-        <p className="footer-quote">Good nails, Good mood, Good day! ♡</p>
-        <div className="footer-grid">
+    <footer className="hx-footer">
+      <div className="container hx-container" ref={ref}>
+        <p className="hx-quote">Good nails, Good mood, Good day! ♡</p>
+        <div className="hx-footer-grid">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>
-              <div className="brand-icon" style={{ width: '32px', height: '32px', fontSize: '16px' }}>
-                <Sparkles size={16} color="var(--text-on-accent)" />
-              </div>
-              <span style={{ fontSize: '1.1rem', fontWeight: 700, letterSpacing: '0.1em', color: 'var(--text-main)' }}>
-                AURA NAILS & BEAUTY
+            <div className="hx-brand">
+              <span className="hx-brand-icon">
+                <Sparkles size={16} />
               </span>
+              <span>{SITE.name.toUpperCase()}</span>
             </div>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', maxWidth: '380px', lineHeight: 1.6 }}>
-              Không gian làm móng nghệ thuật phong cách thư giãn, sử dụng sản phẩm sơn organic lành tính và kỹ thuật định hình chuẩn salon quốc tế.
+            <p className="hx-footer-text">
+              Tiệm làm nail và gội đầu dưỡng sinh. Sơn gel lành tính, dụng cụ tiệt trùng cho từng khách,
+              không gian nhẹ nhàng để bạn thư giãn.
             </p>
           </div>
 
           <div>
-            <h4 style={{ color: 'var(--text-gold)', marginBottom: '14px', fontSize: '0.95rem', fontWeight: 600 }}>
-              Thông Tin Liên Hệ
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Phone size={14} color="var(--accent-gold)" />
-                <span>Hotline: 0988 123 456</span>
-              </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <MapPin size={14} color="var(--accent-gold)" />
-                <span>128 Đường Hoa Hồng, Phường Bến Nghé, Quận 1, TP. HCM</span>
-              </div>
-            </div>
+            <h4 className="hx-footer-title">Liên hệ</h4>
+            <ul className="hx-footer-list">
+              <li>
+                <Phone size={14} />
+                <a href={`tel:${SITE.zaloPhone}`}>{SITE.phoneDisplay}</a>
+              </li>
+              <li>
+                <MapPin size={14} />
+                <span>{SITE.address}</span>
+              </li>
+            </ul>
+            <a
+              className="btn btn-secondary hx-footer-zalo"
+              href={zaloLink()}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <MessageCircle size={16} />
+              <span>Nhắn Zalo cho tiệm</span>
+            </a>
           </div>
 
           <div>
-            <h4 style={{ color: 'var(--text-gold)', marginBottom: '14px', fontSize: '0.95rem', fontWeight: 600 }}>
-              Giờ Hoạt Động
-            </h4>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.85rem' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Clock size={14} color="var(--accent-gold)" />
-                <span>Thứ 2 – Chủ Nhật: 08:30 – 20:30</span>
-              </div>
-              <div style={{ color: 'var(--accent-emerald)', fontSize: '0.8rem' }}>
-                ● Khóa lịch tự động theo thời gian thực
-              </div>
-            </div>
+            <h4 className="hx-footer-title">Giờ mở cửa</h4>
+            <ul className="hx-footer-list">
+              <li>
+                <Clock size={14} />
+                <span>{SITE.hours}</span>
+              </li>
+            </ul>
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '40px', paddingTop: '20px', borderTop: '1px dashed var(--border-subtle)', fontSize: '0.78rem', color: 'var(--text-dim)' }}>
-          © 2026 Aura Nails Studio. Hệ thống đặt lịch làm móng thông minh chống trùng lịch 100%.
+        <div className="hx-copyright">
+          © {new Date().getFullYear()} {SITE.name}. Hẹn gặp bạn tại tiệm!
         </div>
       </div>
     </footer>
