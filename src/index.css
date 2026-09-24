@@ -40,6 +40,11 @@
   --gradient-cta: linear-gradient(135deg, #e23e68, #b3123b);
   --gradient-cta-hover: linear-gradient(135deg, #ee4d78, #c8102e);
   --gradient-soft: linear-gradient(180deg, #ffe9ef, #ffffff);
+  /* Hero: light on the text side (dark wine text >= 4.5:1), deeper pink to red on the photo side */
+  --gradient-hero: linear-gradient(100deg, #ffc2d1 0%, #fff6f8 26%, #fff6f8 46%, #ff8fa8 66%, #e23e68 84%, #c8102e 100%);
+  --gradient-hero-mobile: linear-gradient(180deg, #ffc2d1 0%, #fff6f8 24%, #fff6f8 46%, #ff8fa8 68%, #e23e68 100%);
+  /* Footer: px stops keep dark text on the light zone (< 320px) and white text on the deep zone (> 370px) */
+  --gradient-footer: linear-gradient(180deg, #ffc2d1 0, #ff8fa8 180px, #ff6f8e 290px, #c8102e 380px, #b3123b 100%);
 
   /* Elevation */
   --shadow-soft: 0 10px 30px -12px rgba(120, 20, 50, 0.2);

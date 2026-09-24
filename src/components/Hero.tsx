@@ -1,5 +1,5 @@
 import '../styles/hero.css';
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { getStoredServices } from '../data/services';
 import { getMinHints, formatPrice } from '../utils/servicesSummary';
 import type { PriceHint } from '../utils/servicesSummary';
@@ -10,29 +10,20 @@ import type { ServiceMode } from '../context/ModeContext';
 import { SITE, zaloLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
 import { WaveDivider } from './WaveDivider';
+import { Squiggle } from './Squiggle';
 
 interface HeroProps {
   onStartBooking: () => void;
   onOpenLookbook: () => void;
 }
 
-const COLLAGE_PHOTOS: { src: string; alt: string; className: string }[] = [
-  {
-    src: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?auto=format&fit=crop&w=800&q=80',
-    alt: 'Bộ nail sơn gel nghệ thuật',
-    className: 'hx-photo hx-photo-1', // tall arch
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1519014816548-bf5fe059798b?auto=format&fit=crop&w=800&q=80',
-    alt: 'Bộ nail đính đá',
-    className: 'hx-photo hx-photo-2',
-  },
-  {
-    src: 'https://images.unsplash.com/photo-1544161515-4ab6ce6db874?auto=format&fit=crop&w=800&q=80',
-    alt: 'Gội đầu dưỡng sinh thư giãn',
-    className: 'hx-photo hx-photo-3',
-  },
-];
+interface Slide {
+  src: string;
+  name: string;
+}
+
+const AUTO_MS = 5000;
+const MAX_SLIDES = 6;
 
 interface HeroCopy {
   words: string[];
@@ -67,40 +58,116 @@ function buildCopy(hints: ReturnType<typeof getMinHints>): Record<ServiceMode, H
   };
 }
 
+function useReducedMotion(): boolean {
+  const [reduced, setReduced] = useState<boolean>(
+    () => typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches,
+  );
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const onChange = () => setReduced(mq.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
+}
+
 export const Hero: React.FC<HeroProps> = ({
   onStartBooking,
   onOpenLookbook,
 }) => {
-  const { mode } = useMode();
+  const { mode, showsCategory } = useMode();
   const hints = useMemo(() => getMinHints(getStoredServices()), []);
   const copy = buildCopy(hints)[mode ?? 'both'];
-  const collageRef = useRef<HTMLDivElement>(null);
   const infoRef = useReveal<HTMLDivElement>(200);
-  const collageWrapRef = useReveal<HTMLDivElement>(120);
+  const carWrapRef = useReveal<HTMLDivElement>(120);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [revealed, setRevealed] = useState(false);
   const [tiltEnabled, setTiltEnabled] = useState(false);
+  const reducedMotion = useReducedMotion();
+
+  // Slides come from the services matching the chosen mode; always at least three slots.
+  const slides = useMemo<Slide[]>(() => {
+    const all = getStoredServices();
+    const pick = (list: typeof all): Slide[] => {
+      const seen = new Set<string>();
+      const out: Slide[] = [];
+      for (const s of list) {
+        if (!s.imageUrl || seen.has(s.imageUrl)) continue;
+        seen.add(s.imageUrl);
+        out.push({ src: s.imageUrl, name: s.name });
+        if (out.length >= MAX_SLIDES) break;
+      }
+      return out;
+    };
+    let list = pick(all.filter((s) => showsCategory(s.category) && s.showOnLanding !== false));
+    if (list.length === 0) list = pick(all);
+    if (list.length === 0) return [];
+    const base = list.length;
+    for (let i = 0; list.length < 3; i++) list.push(list[i % base]);
+    return list;
+  }, [showsCategory]);
+
+  const n = slides.length;
+  const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const current = n > 0 ? active % n : 0;
+
+  const goTo = useCallback((i: number) => setActive(n > 0 ? ((i % n) + n) % n : 0), [n]);
 
   useEffect(() => {
     setRevealed(true);
     const canHover = window.matchMedia('(hover: hover)').matches;
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    setTiltEnabled(canHover && !reducedMotion);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    setTiltEnabled(canHover && !reduced);
   }, []);
 
+  // Auto-advance every 5s; paused on hover/focus, hidden tab and reduced motion.
+  useEffect(() => {
+    if (reducedMotion || paused || n < 2) return;
+    const id = window.setInterval(() => {
+      if (document.hidden) return;
+      setActive((a) => (a + 1) % n);
+    }, AUTO_MS);
+    return () => window.clearInterval(id);
+  }, [reducedMotion, paused, n]);
+
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!tiltEnabled || !collageRef.current) return;
-    const rect = collageRef.current.getBoundingClientRect();
+    if (!tiltEnabled || !trackRef.current) return;
+    const rect = e.currentTarget.getBoundingClientRect();
     const relX = (e.clientX - rect.left) / rect.width - 0.5;
     const relY = (e.clientY - rect.top) / rect.height - 0.5;
-    collageRef.current.style.setProperty('--tilt-x', `${relY * -8}deg`);
-    collageRef.current.style.setProperty('--tilt-y', `${relX * 8}deg`);
+    trackRef.current.style.setProperty('--tilt-x', `${relY * -5}deg`);
+    trackRef.current.style.setProperty('--tilt-y', `${relX * 6}deg`);
   };
 
-  const handleMouseLeave = () => {
-    if (!collageRef.current) return;
-    collageRef.current.style.setProperty('--tilt-x', '0deg');
-    collageRef.current.style.setProperty('--tilt-y', '0deg');
+  const resetTilt = () => {
+    if (!trackRef.current) return;
+    trackRef.current.style.setProperty('--tilt-x', '0deg');
+    trackRef.current.style.setProperty('--tilt-y', '0deg');
   };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      goTo(current + 1);
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      goTo(current - 1);
+    }
+  };
+
+  const posOf = (i: number): { pos: string; rel: number } => {
+    let rel = (i - current + n) % n;
+    if (rel > n / 2) rel -= n;
+    let pos = 'center';
+    if (rel === 1) pos = 'right';
+    else if (rel === -1) pos = 'left';
+    else if (rel > 1) pos = 'far-right';
+    else if (rel < -1) pos = 'far-left';
+    return { pos, rel };
+  };
+
+  const lastWordIndex = copy.words.length - 1;
 
   return (
     <section className="hx-hero">
@@ -117,10 +184,21 @@ export const Hero: React.FC<HeroProps> = ({
           <h1 className="hx-title">
             {copy.words.map((word, i) => (
               <span key={word + i} className="hx-word" style={{ transitionDelay: `${i * 70}ms` }}>
-                {word}&nbsp;
+                {i === lastWordIndex ? (
+                  <span className="hx-underlined">
+                    {word}
+                    <Squiggle className="hx-squiggle-word" />
+                  </span>
+                ) : (
+                  word
+                )}
+                &nbsp;
               </span>
             ))}
-            <span className="script-text hx-script">{copy.script}</span>
+            <span className="script-text hx-script">
+              {copy.script}
+              <Squiggle className="hx-squiggle-script" />
+            </span>
           </h1>
 
           <p className="hx-desc">{copy.desc}</p>
@@ -141,10 +219,12 @@ export const Hero: React.FC<HeroProps> = ({
               <Clock size={16} />
               {SITE.hours}
             </span>
+            <Squiggle vertical className="hx-info-sep" />
             <span className="hx-info-item">
               <MapPin size={16} />
               {SITE.address}
             </span>
+            <Squiggle vertical className="hx-info-sep" />
             <a
               className="hx-info-item hx-info-zalo"
               href={zaloLink()}
@@ -157,25 +237,67 @@ export const Hero: React.FC<HeroProps> = ({
           </div>
         </div>
 
-        <div className="hx-collage-wrap" ref={collageWrapRef}>
-          <div
-            className="hx-collage"
-            ref={collageRef}
-            onMouseMove={handleMouseMove}
-            onMouseLeave={handleMouseLeave}
-          >
-            {COLLAGE_PHOTOS.map((photo) => (
-              <button
-                key={photo.className}
-                type="button"
-                className={photo.className}
-                onClick={onOpenLookbook}
-                aria-label={`Xem mẫu: ${photo.alt}`}
-              >
-                <img src={photo.src} alt={photo.alt} loading="lazy" />
-              </button>
-            ))}
-          </div>
+        <div className="hx-collage-wrap" ref={carWrapRef}>
+          {n > 0 && (
+            <div
+              className="hx-car"
+              role="group"
+              aria-roledescription="carousel"
+              aria-label="Mẫu nổi bật của tiệm"
+              onKeyDown={handleKeyDown}
+              onMouseEnter={() => setPaused(true)}
+              onMouseLeave={() => {
+                setPaused(false);
+                resetTilt();
+              }}
+              onMouseMove={handleMouseMove}
+              onFocus={(e) => {
+                if (e.target.matches(':focus-visible')) setPaused(true);
+              }}
+              onBlur={() => setPaused(false)}
+            >
+              <div className="hx-car-stage">
+                <div className="hx-car-track" ref={trackRef}>
+                  {slides.map((slide, i) => {
+                    const { pos } = posOf(i);
+                    const isCenter = pos === 'center';
+                    const isSide = pos === 'left' || pos === 'right';
+                    return (
+                      <button
+                        key={i}
+                        type="button"
+                        className={`hx-car-item hx-pos-${pos}`}
+                        tabIndex={isCenter || isSide ? 0 : -1}
+                        aria-hidden={isCenter || isSide ? undefined : true}
+                        aria-roledescription="slide"
+                        aria-label={
+                          isCenter
+                            ? `Xem mẫu: ${slide.name}`
+                            : `Đưa ra giữa: ${slide.name}`
+                        }
+                        onClick={() => (isCenter ? onOpenLookbook() : goTo(i))}
+                      >
+                        <img src={slide.src} alt={slide.name} loading={isCenter ? 'eager' : 'lazy'} draggable={false} />
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="hx-car-dots">
+                {slides.map((slide, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    className={`hx-car-dot ${i === current ? 'is-active' : ''}`}
+                    aria-label={`Xem mẫu ${i + 1}: ${slide.name}`}
+                    aria-current={i === current ? 'true' : undefined}
+                    onClick={() => goTo(i)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

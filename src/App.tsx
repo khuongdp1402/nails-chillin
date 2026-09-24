@@ -5,7 +5,6 @@ import { getStoredBookings, subscribeToBookingUpdates } from './utils/storage';
 import { Header } from './components/Header';
 import { Hero } from './components/Hero';
 import { FeatureStrip } from './components/FeatureStrip';
-import { TrustBadgeStrip } from './components/TrustBadgeStrip';
 import { ServicesShowcase } from './components/ServicesShowcase';
 import { BookingWizard } from './components/BookingWizard';
 import { AdminDashboard } from './components/AdminDashboard';
@@ -161,8 +160,6 @@ export function App() {
               />
             </div>
           </section>
-
-          <TrustBadgeStrip />
         </main>
       )}
 

@@ -1,8 +1,7 @@
 import '../styles/hero.css';
 import React from 'react';
 import { ShieldCheck, Clock, Palette, Award } from 'lucide-react';
-import { useReveal } from '../hooks/useReveal';
-import { WaveDivider } from './WaveDivider';
+import { Squiggle } from './Squiggle';
 
 const BADGES = [
   { icon: ShieldCheck, label: 'Vệ sinh, an toàn' },
@@ -11,22 +10,17 @@ const BADGES = [
   { icon: Award, label: 'Thợ tay nghề cao' },
 ];
 
-export const TrustBadgeStrip: React.FC = () => {
-  const ref = useReveal<HTMLElement>();
-  return (
-    <section ref={ref} className="hx-trust">
-      <WaveDivider variant={2} color="var(--accent-rose-dark)" className="hx-trust-wave hx-trust-wave-top" />
-      <div className="hx-trust-band">
-        <div className="container hx-container hx-trust-grid">
-          {BADGES.map(({ icon: Icon, label }) => (
-            <div key={label} className="hx-trust-item">
-              <Icon size={18} />
-              <span>{label}</span>
-            </div>
-          ))}
+/** Four trust items; rendered inside the footer's ombre section. */
+export const TrustBadgeStrip: React.FC = () => (
+  <div className="hx-trust">
+    {BADGES.map(({ icon: Icon, label }, i) => (
+      <React.Fragment key={label}>
+        {i > 0 && <Squiggle vertical className="hx-trust-sep" />}
+        <div className="hx-trust-item">
+          <Icon size={18} />
+          <span>{label}</span>
         </div>
-      </div>
-      <WaveDivider variant={3} flip color="var(--accent-rose-dark)" className="hx-trust-wave hx-trust-wave-bottom" />
-    </section>
-  );
-};
+      </React.Fragment>
+    ))}
+  </div>
+);
