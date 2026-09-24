@@ -78,6 +78,8 @@ interface DrawerProps {
 
 function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
   const [draft, setDraft] = useState<Draft>(() => toDraft(editing ?? undefined));
+  const initialRef = useRef(JSON.stringify(toDraft(editing ?? undefined)));
+  const dirty = JSON.stringify(draft) !== initialRef.current;
   const [errors, setErrors] = useState<{ name?: string; price?: string }>({});
   const [saveError, setSaveError] = useState('');
   const [closing, setClosing] = useState(false);
@@ -257,11 +259,18 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
           {saveError && <p className="sm-error sm-save-error" role="alert">{saveError}</p>}
 
-          <footer className="sm-form-foot">
-            <button type="button" className="btn btn-secondary" onClick={requestClose}>Hủy</button>
-            <button type="submit" className="btn btn-primary">
-              {editing ? 'Lưu thay đổi' : 'Thêm dịch vụ'}
-            </button>
+          <footer className={`sm-bar${dirty ? ' is-ready' : ''}`}>
+            <div className="sm-bar-inner">
+              <span className="sm-bar-note" aria-live="polite">
+                {dirty ? 'Bạn có thay đổi chưa lưu' : 'Chưa có thay đổi'}
+              </span>
+              <div className="sm-bar-btns">
+                <button type="button" className="btn btn-secondary" onClick={requestClose}>Hủy</button>
+                <button type="submit" className="btn btn-primary">
+                  {editing ? 'Lưu thay đổi' : 'Thêm dịch vụ'}
+                </button>
+              </div>
+            </div>
           </footer>
         </form>
       </div>
@@ -379,7 +388,7 @@ export function ServicesManager({ services, onServicesChanged }: ServicesManager
             {list.map((s) => (
               <li key={s.id} className="sm-item">
                 <div className="sm-thumb">
-                  {s.imageUrl ? <img src={s.imageUrl} alt="" loading="lazy" /> : <ImageOff size={20} aria-hidden="true" />}
+                  {s.imageUrl ? <img src={s.imageUrl} alt="" loading="lazy" /> : <ImageOff size={24} aria-hidden="true" />}
                 </div>
                 <div className="sm-info">
                   <strong className="sm-name">{s.name}</strong>

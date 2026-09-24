@@ -2,19 +2,18 @@ import '../../styles/booking.css';
 import React, { useState, useMemo, useEffect, useRef, useCallback } from 'react';
 import type { Service, Booking } from '../../types';
 import {
-  formatDuration,
   generateAvailableSlots,
   minutesToTime,
   timeToMinutes,
   getServiceNames,
 } from '../../utils/scheduler';
 import { attemptCreateBooking } from '../../utils/storage';
-import { generateGoogleCalendarUrl, downloadIcsFile } from '../../utils/calendar';
 import { useMode } from '../../context/ModeContext';
 import { zaloLink, SITE } from '../../data/site';
 import { SALON_HOURS } from '../../data/services';
 import { scrollToTarget } from '../../utils/scroll';
 import confetti from 'canvas-confetti';
+import { CustomDatePicker } from '../ui/CustomDatePicker';
 import {
   Calendar,
   Clock,
@@ -25,8 +24,7 @@ import {
   ChevronRight,
   ChevronLeft,
   Check,
-  CalendarPlus,
-  Download,
+  Heart,
   Images,
   MessageCircle,
 } from 'lucide-react';
@@ -112,6 +110,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const containerRef = useRef<HTMLDivElement>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
   const firstRender = useRef(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
   const currentStepRef = useRef(1);
   useEffect(() => {
     currentStepRef.current = currentStep;
@@ -141,9 +140,15 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       firstRender.current = false;
       return;
     }
+    if (scrollRef.current) scrollRef.current.scrollTop = 0;
     scrollToTarget(containerRef.current);
     headingRef.current?.focus({ preventScroll: true });
   }, [currentStep]);
+
+  // Sau khi chép nội dung Zalo, cuộn vùng cuộn xuống để khách thấy thông báo
+  useEffect(() => {
+    if (zaloNotice && scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+  }, [zaloNotice]);
 
   const goToStep = useCallback((step: number) => {
     if (prefersReduced()) {
@@ -241,7 +246,13 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
     window.requestAnimationFrame(() => {
       const el = document.getElementById(id);
       if (!el) return;
-      scrollToTarget(el, { extraOffset: 40 });
+      // Cuộn bên trong vùng cuộn của wizard, rồi đưa đầu wizard xuống dưới header
+      const scroller = scrollRef.current;
+      if (scroller) {
+        const delta = el.getBoundingClientRect().top - scroller.getBoundingClientRect().top;
+        scroller.scrollTo({ top: Math.max(0, scroller.scrollTop + delta - 12), behavior: prefersReduced() ? 'auto' : 'smooth' });
+      }
+      scrollToTarget(containerRef.current);
       if (el instanceof HTMLInputElement || el instanceof HTMLButtonElement) {
         el.focus({ preventScroll: true });
       }
@@ -324,7 +335,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   };
 
   const zaloMessage = (b: Booking) =>
-    `Chào tiệm, mình là ${b.customerName}. Mình đã đặt lịch ${b.startTime} – ${b.endTime} ngày ${formatDateVi(
+    `Chào tiệm, mình là ${b.customerName}. Mình đã đặt lịch lúc ${b.startTime} ngày ${formatDateVi(
       b.date
     )}, dịch vụ: ${getServiceNames(b.serviceIds, services)}. Nhờ tiệm xác nhận giúp mình nhé.`;
 
@@ -356,22 +367,16 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
         className={`bk-svc ${isSelected ? 'is-selected' : ''}`}
         onClick={() => handleToggleService(service.id)}
       >
-        <span className="bk-svc-inner">
-          <span className="bk-svc-img">
-            <img src={service.imageUrl} alt={service.name} loading="lazy" />
-            <span className="bk-check" aria-hidden="true">
-              <Check size={14} strokeWidth={3} />
-            </span>
-          </span>
-          <span className="bk-svc-info">
-            <span className="bk-svc-name">{service.name}</span>
-            <span className="bk-svc-meta">
-              <span className="bk-dur">
-                <Clock size={11} />
-                {formatDuration(service.durationMinutes)}
-              </span>
-              <span className="price">{service.price.toLocaleString('vi-VN')}đ</span>
-            </span>
+        <span className="bk-svc-img">
+          <img src={service.imageUrl} alt="" loading="lazy" />
+        </span>
+        <span className="bk-svc-info">
+          <span className="bk-svc-name">{service.name}</span>
+        </span>
+        <span className="bk-svc-end">
+          <span className="price">{service.price.toLocaleString('vi-VN')}đ</span>
+          <span className="bk-check" aria-hidden="true">
+            <Check size={13} strokeWidth={3} />
           </span>
         </span>
       </button>
@@ -379,6 +384,13 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   };
 
   const bodyClass = `bk-body ${leaving ? 'is-leaving' : ''}`;
+
+  const shopNote = (
+    <p className="bk-shop-note">
+      <Heart size={15} className="bk-shop-note-icon" aria-hidden="true" />
+      <span>Tiệm nhỏ xinh nên chỉ nhận số lượng khách có hạn, bạn thông cảm cho shop nhé ♡</span>
+    </p>
+  );
 
   return (
     <div id="booking-wizard-container" ref={containerRef} className="bk-panel">
@@ -408,7 +420,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       {/* BƯỚC 1 */}
       {currentStep === 1 && (
         <div key="step1" className={bodyClass}>
-          <div className="step-enter">
+          <div className={`bk-scroll step-enter ${activeIds.length > 0 ? 'has-bar' : ''}`} ref={scrollRef}>
             <div className="bk-head bk-head-row">
               <div>
                 <h3 className="bk-title" tabIndex={-1} ref={headingRef}>
@@ -421,6 +433,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 Xem mẫu
               </button>
             </div>
+            {shopNote}
 
             {visibleServices.length === 0 && (
               <div className="bk-empty">Hiện chưa có dịch vụ nào trong mục này. Bạn nhắn Zalo cho tiệm để được tư vấn nhé.</div>
@@ -439,19 +452,23 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
               </div>
             )}
 
-            <div className="bk-total">
-              <span>
-                <b>{activeIds.length}</b> dịch vụ · <b>{formatDuration(totalDurationMinutes)}</b>
-              </span>
-              <span className="price">{totalPrice.toLocaleString('vi-VN')}đ</span>
-            </div>
-            {step1Error && <span className="bk-err" role="alert" style={{ marginBottom: 10 }}>{step1Error}</span>}
+            {step1Error && <span className="bk-err" role="alert">{step1Error}</span>}
+          </div>
 
-            <div className="bk-nav" style={{ justifyContent: 'flex-end' }}>
-              <button type="button" className="btn btn-primary" onClick={handleProceedToStep2}>
-                <span>Chọn ngày giờ</span>
-                <ChevronRight size={18} />
-              </button>
+          <div className={`bk-bar ${activeIds.length > 0 ? 'is-shown' : ''}`}>
+            <div className="bk-bar-inner">
+              <div className="bk-bar-sum" aria-live="polite">
+                <span className="bk-bar-line">
+                  <b>{activeIds.length}</b> dịch vụ
+                </span>
+                <span className="price bk-bar-price">{totalPrice.toLocaleString('vi-VN')}đ</span>
+              </div>
+              <div className="bk-bar-btns">
+                <button type="button" className="btn btn-primary" onClick={handleProceedToStep2}>
+                  <span>Tiếp tục</span>
+                  <ChevronRight size={18} />
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -460,14 +477,19 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       {/* BƯỚC 2 */}
       {currentStep === 2 && (
         <div key="step2" className={bodyClass}>
-          <div className="step-enter">
-            <div className="bk-head">
-              <h3 className="bk-title" tabIndex={-1} ref={headingRef}>
-                Cho tiệm biết bạn là ai và đến lúc nào
-              </h3>
-              <p className="bk-sub">
-                Tiệm mở {SITE.hours} — bạn chọn giờ bắt đầu, tiệm giữ trọn {formatDuration(totalDurationMinutes)} cho bạn.
-              </p>
+          <div
+            className="bk-scroll step-enter has-bar"
+            ref={scrollRef}
+          >
+            <div className="bk-head bk-head-row">
+              <div>
+                <h3 className="bk-title" tabIndex={-1} ref={headingRef}>
+                  Cho tiệm biết bạn là ai và đến lúc nào
+                </h3>
+                <p className="bk-sub">
+                  Tiệm mở {SITE.hours} — bạn chọn giờ đến, tiệm giữ chỗ cho bạn.
+                </p>
+              </div>
             </div>
 
             <div className="bk-fields">
@@ -504,7 +526,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
               </div>
             </div>
 
-            <div className="bk-field" style={{ marginBottom: 6 }}>
+            <div className="bk-field bk-date-field">
               <label className="bk-label" htmlFor="bk-date">
                 <Calendar size={13} /> Ngày hẹn
               </label>
@@ -530,33 +552,34 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 >
                   Cuối tuần
                 </button>
-                <input
-                  id="bk-date"
-                  type="date"
-                  className={`bk-input bk-date-input ${formErrors.date ? 'is-invalid' : ''}`}
+                <CustomDatePicker
                   value={date}
                   min={todayIso}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={(d) => {
+                    setDate(d);
+                    setFormErrors((prev) => ({ ...prev, date: '' }));
+                  }}
+                  hasError={Boolean(formErrors.date)}
                 />
               </div>
               {formErrors.date && <span className="bk-err">{formErrors.date}</span>}
             </div>
 
-            <label className="bk-label" style={{ marginTop: 12 }}>
-              <Clock size={13} /> Giờ bắt đầu (giờ lớn) và giờ xong dự kiến (giờ nhỏ)
-            </label>
+            {shopNote}
+
+            <span className="bk-label bk-slots-label">
+              <Clock size={13} /> Giờ bạn đến
+            </span>
 
             {anySlotFree ? (
               <div id="bk-slots" className="bk-slots" role="group" aria-label="Khung giờ hẹn">
-                {availableSlots.map((slot) => {
+                {availableSlots.filter((s) => s.isAvailable).map((slot) => {
                   const isSelected = selectedStartTime === slot.timeStr;
                   return (
                     <button
                       key={slot.timeStr}
                       type="button"
-                      disabled={!slot.isAvailable}
                       aria-pressed={isSelected}
-                      title={slot.isAvailable ? undefined : slot.conflictReason || 'Đã có khách đặt'}
                       className={`bk-slot ${isSelected ? 'is-selected' : ''}`}
                       onClick={() => {
                         setSelectedStartTime(slot.timeStr);
@@ -566,15 +589,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                     >
                       {isSelected && <Check size={13} strokeWidth={3} className="bk-slot-tick" />}
                       <span className="bk-slot-time">{slot.timeStr}</span>
-                      <span className="bk-slot-end">
-                        {slot.isAvailable
-                          ? `đến ${slot.endTimeStr}`
-                          : slot.conflictReason === 'Đã qua giờ'
-                          ? 'Đã qua giờ'
-                          : slot.conflictReason === LEAD_REASON
-                          ? 'Quá sát giờ'
-                          : 'Hết chỗ'}
-                      </span>
                     </button>
                   );
                 })}
@@ -588,35 +602,53 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
               </div>
             ) : (
               <div id="bk-slots" className="bk-empty">
-                Ngày này không còn giờ nào đủ {formatDuration(totalDurationMinutes)} cho các dịch vụ bạn chọn.
-                Bạn thử chọn ngày khác, hoặc bớt một dịch vụ để rút ngắn thời gian nhé.
+                Ngày này tiệm đã kín giờ, bạn chọn ngày khác nhé ♡
               </div>
             )}
-            {formErrors.slot && <span className="bk-err" style={{ marginTop: -8, marginBottom: 12 }}>{formErrors.slot}</span>}
+            {formErrors.slot && <span className="bk-err bk-slot-err">{formErrors.slot}</span>}
 
-            {selectedStartTime && calculatedEndTime ? (
-              <div className="bk-summary" aria-live="polite">
-                <span className="bk-summary-main">
-                  {selectedStartTime} – {calculatedEndTime} · {formatDuration(totalDurationMinutes)} ·{' '}
-                  <span className="price">{totalPrice.toLocaleString('vi-VN')}đ</span>
+            <p className="bk-hint" aria-live="polite">
+              {selectedStartTime && calculatedEndTime
+                ? `${formatDateVi(date)} · ${getServiceNames(activeIds, services)}`
+                : 'Bạn chọn một giờ để tiếp tục nhé.'}
+            </p>
+          </div>
+
+          <div className="bk-bar is-shown">
+            <div className="bk-bar-inner">
+              <div className="bk-bar-sum" aria-live="polite">
+                <span className="bk-bar-line">
+                  {selectedStartTime && calculatedEndTime ? (
+                    <>
+                      <b>
+                        {formatDateVi(date)} · {selectedStartTime}
+                      </b>
+                    </>
+                  ) : (
+                    <>Chọn giờ để tiếp tục</>
+                  )}
                 </span>
-                <span className="bk-summary-sub">
-                  {formatDateVi(date)} · {getServiceNames(activeIds, services)}
+                <span className="bk-bar-line">
+                  {activeIds.length} dịch vụ · <span className="price bk-bar-price">{totalPrice.toLocaleString('vi-VN')}đ</span>
                 </span>
               </div>
-            ) : (
-              <p className="bk-hint">Chọn một giờ để xem giờ xong và tổng tiền.</p>
-            )}
-
-            <div className="bk-nav">
-              <button type="button" className="btn btn-secondary" onClick={() => goToStep(1)}>
-                <ChevronLeft size={18} />
-                <span>Quay lại</span>
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleConfirmBooking}>
-                <CheckCircle size={18} />
-                <span>Xác nhận đặt lịch</span>
-              </button>
+              <div className="bk-bar-btns">
+                <button type="button" className="btn btn-secondary" onClick={() => goToStep(1)} aria-label="Quay lại">
+                  <ChevronLeft size={18} />
+                  <span className="bk-btn-label">Quay lại</span>
+                </button>
+                <button
+                  type="button"
+                  className={`btn btn-primary ${selectedStartTime && calculatedEndTime ? '' : 'is-waiting'}`}
+                  disabled={!(selectedStartTime && calculatedEndTime)}
+                  onClick={handleConfirmBooking}
+                >
+                  <CheckCircle size={18} />
+                  <span>
+                    Xác nhận<span className="bk-btn-label"> đặt lịch</span>
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -625,16 +657,16 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       {/* BƯỚC 3 */}
       {currentStep === 3 && lastCreatedBooking && (
         <div key="step3" className={bodyClass}>
-          <div className="step-enter bk-done">
+          <div className="bk-scroll bk-done step-enter" ref={scrollRef}>
             <div className="bk-done-icon">
-              <Check size={32} strokeWidth={3} />
+              <Check size={26} strokeWidth={3} />
             </div>
-            <h3 className="bk-title" tabIndex={-1} ref={headingRef} style={{ fontSize: '1.3rem' }}>
+            <h3 className="bk-title" tabIndex={-1} ref={headingRef}>
               Đã giữ chỗ cho bạn rồi!
             </h3>
-            <p className="bk-sub" style={{ maxWidth: 440, margin: '0 auto' }}>
+            <p className="bk-sub bk-done-sub">
               Hẹn gặp {lastCreatedBooking.customerName} lúc {lastCreatedBooking.startTime} ngày{' '}
-              {formatDateVi(lastCreatedBooking.date)}. Bạn lưu vào lịch hoặc nhắn Zalo để tiệm xác nhận nhé.
+              {formatDateVi(lastCreatedBooking.date)}. Bạn bấm nhắn Zalo dưới đây để tiệm giữ chỗ chu đáo cho bạn nhé.
             </p>
 
             <div className="bk-receipt">
@@ -653,10 +685,8 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 <span>{formatDateVi(lastCreatedBooking.date)}</span>
               </div>
               <div className="bk-row">
-                <span>Giờ làm</span>
-                <span>
-                  {lastCreatedBooking.startTime} – {lastCreatedBooking.endTime} ({formatDuration(lastCreatedBooking.totalMinutes)})
-                </span>
+                <span>Giờ hẹn</span>
+                <span>{lastCreatedBooking.startTime}</span>
               </div>
               <div className="bk-row">
                 <span>Dịch vụ</span>
@@ -668,45 +698,10 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
               </div>
             </div>
 
-            <div className="bk-actions">
-              <a
-                href={zaloLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn bk-zalo"
-                onClick={() => handleZaloClick(lastCreatedBooking)}
-              >
-                <MessageCircle size={16} />
-                <span>Nhắn Zalo cho tiệm</span>
-              </a>
-              <a
-                href={generateGoogleCalendarUrl(
-                  lastCreatedBooking,
-                  getServiceNames(lastCreatedBooking.serviceIds, services)
-                )}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn btn-secondary"
-              >
-                <CalendarPlus size={16} />
-                <span>Thêm vào Google Calendar</span>
-              </a>
-              <button
-                type="button"
-                className="btn btn-secondary"
-                onClick={() =>
-                  downloadIcsFile(lastCreatedBooking, getServiceNames(lastCreatedBooking.serviceIds, services))
-                }
-              >
-                <Download size={16} />
-                <span>Tải file lịch</span>
-              </button>
-              <button type="button" className="btn btn-primary" onClick={handleResetForNewBooking}>
-                <span>Đặt thêm lịch</span>
-              </button>
-            </div>
+            <p className="bk-hint bk-done-hint">Nếu cần đổi giờ, bạn nhắn Zalo cho tiệm sớm giúp mình nhé ♡</p>
+            {shopNote}
             {zaloNotice && (
-              <p className="bk-hint" role="status" style={{ marginTop: 12 }}>
+              <p className="bk-hint" role="status">
                 {zaloNotice.ok ? (
                   'Đã chép nội dung đặt lịch, bạn dán vào Zalo nhé'
                 ) : (
@@ -718,6 +713,21 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 )}
               </p>
             )}
+            <div className="bk-actions">
+              <a
+                href={zaloLink()}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn bk-zalo"
+                onClick={() => handleZaloClick(lastCreatedBooking)}
+              >
+                <MessageCircle size={16} />
+                <span>Nhắn Zalo cho tiệm</span>
+              </a>
+              <button type="button" className="btn btn-primary" onClick={handleResetForNewBooking}>
+                <span>Đặt thêm lịch</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

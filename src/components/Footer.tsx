@@ -4,7 +4,6 @@ import { MapPin, Phone, Clock, Sparkles, MessageCircle } from 'lucide-react';
 import { SITE, zaloLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
 import { WaveDivider } from './WaveDivider';
-import { TrustBadgeStrip } from './TrustBadgeStrip';
 
 export const Footer: React.FC = () => {
   const ref = useReveal<HTMLDivElement>();
@@ -12,7 +11,6 @@ export const Footer: React.FC = () => {
     <footer className="hx-footer">
       <WaveDivider variant={1} flip color="var(--bg-main)" className="hx-footer-wave" />
       <div className="container hx-container hx-footer-top">
-        <TrustBadgeStrip />
         <p className="hx-quote">Good nails, Good mood, Good day! ♡</p>
       </div>
       <div className="container hx-container hx-footer-body" ref={ref}>
@@ -22,7 +20,7 @@ export const Footer: React.FC = () => {
               <span className="hx-brand-icon">
                 <Sparkles size={16} />
               </span>
-              <span>{SITE.name.toUpperCase()}</span>
+              <span>{SITE.name}</span>
             </div>
             <p className="hx-footer-text">
               Tiệm làm nail và gội đầu dưỡng sinh. Sơn gel lành tính, dụng cụ tiệt trùng cho từng khách,

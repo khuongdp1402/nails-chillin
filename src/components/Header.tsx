@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Sparkles, CalendarDays, ChevronDown } from 'lucide-react';
 import '../styles/chrome.css';
 import { useMode } from '../context/ModeContext';
@@ -16,8 +16,28 @@ const MODE_SHORT = { nail: 'Nail', headspa: 'Gội đầu', both: 'Cả hai' } a
 
 export const Header: React.FC<HeaderProps> = ({ onScrollToBooking, onGoHome, onOpenModePicker, isAdminView }) => {
   const { mode } = useMode();
+  const [compact, setCompact] = useState(false);
+
+  // Thu gọn header khi cuộn xuống, mở lại khi về gần đầu trang (ngưỡng lệch nhau để không chớp)
+  useEffect(() => {
+    let ticking = false;
+    const update = () => {
+      ticking = false;
+      const y = window.scrollY;
+      setCompact((prev) => (prev ? y > 24 : y > 90));
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        window.requestAnimationFrame(update);
+      }
+    };
+    update();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
   return (
-    <header className="site-header ch-header">
+    <header className={`site-header ch-header${compact ? ' is-compact' : ''}`}>
       <div className="container header-inner">
         <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); onGoHome(); }}>
           <div className="brand-icon">

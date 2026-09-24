@@ -23,36 +23,40 @@ interface Slide {
 }
 
 const AUTO_MS = 5000;
-const MAX_SLIDES = 6;
+const MAX_SLIDES = 4;
 
 interface HeroCopy {
-  words: string[];
-  script: string;
+  title: string[];
+  script: string[];
   desc: string;
+  price: string;
   eyebrow: string;
 }
 
 const priceText = (h: PriceHint | null): string =>
-  h ? ` Giá từ ${formatPrice(h.price)}, khoảng ${formatDuration(h.minutes)}.` : '';
+  h ? `Từ ${formatPrice(h.price)} · ${formatDuration(h.minutes)}.` : '';
 
 function buildCopy(hints: ReturnType<typeof getMinHints>): Record<ServiceMode, HeroCopy> {
   return {
     nail: {
-      words: ['Đôi', 'tay', 'xinh,'],
-      script: 'tâm trạng vui',
-      desc: `Sơn gel bền 3–4 tuần, dụng cụ tiệt trùng cho từng khách.${priceText(hints.nail)}`,
+      title: ['Đôi tay đẹp,'],
+      script: ['tinh tế', 'từng chi tiết'],
+      desc: 'Sơn gel lành tính, bền màu 3–4 tuần.',
+      price: priceText(hints.nail),
       eyebrow: 'Làm nail',
     },
     headspa: {
-      words: ['Gội', 'đầu', 'dưỡng', 'sinh,'],
-      script: 'nhẹ người ngay',
-      desc: `Gội đầu dưỡng sinh có massage cổ vai gáy, bạn chỉ việc nằm thư giãn.${priceText(hints.headspa)}`,
+      title: ['Thư thái', 'từng nhịp thở,'],
+      script: ['nhẹ tênh', 'cả ngày dài'],
+      desc: 'Gội đầu thảo mộc kèm massage cổ vai gáy.',
+      price: priceText(hints.headspa),
       eyebrow: 'Gội đầu dưỡng sinh',
     },
     both: {
-      words: ['Làm', 'nail', 'và', 'gội', 'đầu,'],
-      script: 'một buổi trọn vẹn',
-      desc: `Đặt cả hai trong một lần, bạn ghé một chuyến là xong.${priceText(hints.both)}`,
+      title: ['Chăm từ đầu', 'ngón tay,'],
+      script: ['đến', 'mái tóc mềm'],
+      desc: 'Một buổi trọn vẹn cho đôi tay và mái tóc, bạn ghé một lần là đủ.',
+      price: priceText(hints.both),
       eyebrow: 'Nail & Gội đầu dưỡng sinh',
     },
   };
@@ -167,7 +171,7 @@ export const Hero: React.FC<HeroProps> = ({
     return { pos, rel };
   };
 
-  const lastWordIndex = copy.words.length - 1;
+  const lastTitleIndex = copy.title.length - 1;
 
   return (
     <section className="hx-hero">
@@ -182,26 +186,44 @@ export const Hero: React.FC<HeroProps> = ({
           </span>
 
           <h1 className="hx-title">
-            {copy.words.map((word, i) => (
-              <span key={word + i} className="hx-word" style={{ transitionDelay: `${i * 70}ms` }}>
-                {i === lastWordIndex ? (
-                  <span className="hx-underlined">
-                    {word}
-                    <Squiggle className="hx-squiggle-word" />
+            <span className="hx-line hx-line-title">
+              {copy.title.map((chunk, i) => (
+                <React.Fragment key={chunk}>
+                  <span className="hx-word" style={{ transitionDelay: `${i * 90}ms` }}>
+                    {i === lastTitleIndex ? (
+                      <span className="hx-underlined">
+                        {chunk}
+                        <Squiggle className="hx-squiggle-word" />
+                      </span>
+                    ) : (
+                      chunk
+                    )}
+                  </span>{' '}
+                </React.Fragment>
+              ))}
+            </span>
+            <span className="script-text hx-script hx-line">
+              {copy.script.map((chunk, i) => (
+                <React.Fragment key={chunk}>
+                  <span className="hx-word" style={{ transitionDelay: `${(copy.title.length + i) * 90}ms` }}>
+                    {chunk}
                   </span>
-                ) : (
-                  word
-                )}
-                &nbsp;
-              </span>
-            ))}
-            <span className="script-text hx-script">
-              {copy.script}
+                  {i < copy.script.length - 1 ? ' ' : null}
+                </React.Fragment>
+              ))}
               <Squiggle className="hx-squiggle-script" />
             </span>
           </h1>
 
-          <p className="hx-desc">{copy.desc}</p>
+          <p className="hx-desc">
+            {copy.desc}
+            {copy.price ? (
+              <>
+                {' '}
+                <span className="hx-price">{copy.price}</span>
+              </>
+            ) : null}
+          </p>
 
           <div className="hx-cta-row">
             <button type="button" className="btn btn-primary" onClick={onStartBooking}>
