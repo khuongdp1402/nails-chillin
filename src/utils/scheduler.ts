@@ -53,29 +53,123 @@ export function isOverlapping(
 }
 
 /**
- * Lấy capacity (số lượng tối đa cho phép) của dịch vụ vào ngày chỉ định
+ * Lấy số nhân viên (thợ) phục vụ tối đa cho dịch vụ vào ngày chỉ định
+ * (Mô hình: 1 thợ takecare 1 khách 1-on-1 suốt thời gian làm)
  */
 export function getServiceCapacityOnDate(service: Service, dateIso: string): number {
-  let capacity = service.capacity || 1;
-  if (service.capacityOverrides && service.capacityOverrides.length > 0) {
-    const targetDate = new Date(dateIso);
-    const dayOfWeek = targetDate.getDay();
-    
-    const dateOverride = service.capacityOverrides.find(o => o.type === 'date' && o.date === dateIso);
-    if (dateOverride) return dateOverride.capacity;
-    
-    const rangeOverride = service.capacityOverrides.find(o => o.type === 'dateRange' && o.startDate && o.endDate && dateIso >= o.startDate && dateIso <= o.endDate);
-    if (rangeOverride) return rangeOverride.capacity;
-    
-    const weekdayOverride = service.capacityOverrides.find(o => o.type === 'weekday' && o.weekdays && o.weekdays.includes(dayOfWeek));
-    if (weekdayOverride) return weekdayOverride.capacity;
+  const defaultCapacity = service.capacity || 1;
+  if (!service.capacityOverrides || service.capacityOverrides.length === 0) {
+    return defaultCapacity;
   }
-  return capacity;
+
+  // Tách năm, tháng, ngày an toàn tuyệt đối với timezone trình duyệt
+  const [y, m, d] = dateIso.split('-').map(Number);
+  const targetDate = new Date(y, m - 1, d);
+  const dayOfWeek = targetDate.getDay(); // 0: Chủ nhật, 1: Thứ 2, ..., 6: Thứ 7
+
+  // 1. Ưu tiên ngày cụ thể chính xác nhất (date)
+  const dateOverride = service.capacityOverrides.find(
+    (o) => o.type === 'date' && o.date === dateIso
+  );
+  if (dateOverride) return dateOverride.capacity;
+
+  // 2. Kế đến là khoảng ngày (dateRange)
+  const rangeOverride = service.capacityOverrides.find(
+    (o) =>
+      o.type === 'dateRange' &&
+      o.startDate &&
+      o.endDate &&
+      dateIso >= o.startDate &&
+      dateIso <= o.endDate
+  );
+  if (rangeOverride) return rangeOverride.capacity;
+
+  // 3. Kế đến là theo thứ trong tuần lặp lại (weekday)
+  const weekdayOverride = service.capacityOverrides.find(
+    (o) => o.type === 'weekday' && o.weekdays && o.weekdays.includes(dayOfWeek)
+  );
+  if (weekdayOverride) return weekdayOverride.capacity;
+
+  return defaultCapacity;
+}
+
+/**
+ * Kiểm tra xem trong khoảng thời gian [slotStart, slotEnd), dịch vụ serviceId có bị thiếu thợ hay không.
+ *
+ * Bản chất vận hành salon:
+ * - 1 dịch vụ = 1 khách = 1 thợ phục vụ riêng biệt suốt ca làm việc.
+ * - capacityLimit = số lượng thợ trực nhận làm dịch vụ này trong ngày (mặc định hoặc theo ngày đặc biệt).
+ * - Một khung giờ [slotStart, slotEnd) chỉ bị xem là KÍN LỊCH khi và chỉ khi TẠI MỘT THỜI ĐIỂM BẤT KỲ t trong ca,
+ *   tất cả capacityLimit thợ đều đang bận chăm sóc các khách khác.
+ *
+ * Thuật toán kiểm tra đỉnh điểm đồng thời (Peak Concurrency Check):
+ * - Concurrency chỉ tăng lên tại slotStart hoặc tại thời điểm bắt đầu của một booking khác trong ca.
+ * - Do đó kiểm tra tại các mốc thời gian này đảm bảo chính xác 100%, không bị lỗi cộng dồn sai các ca nối tiếp nhau.
+ */
+export function isCapacityExceeded(
+  slotStart: number,
+  slotEnd: number,
+  serviceId: string,
+  capacityLimit: number,
+  activeBookings: Booking[]
+): { exceeded: boolean; peakBusyCount: number; peakTimeStr?: string } {
+  // Lọc các booking có dịch vụ này đang diễn ra và có giao với [slotStart, slotEnd)
+  const overlappingBookings = activeBookings.filter((b) => {
+    const bStart = timeToMinutes(b.startTime);
+    const bEnd = timeToMinutes(b.endTime);
+    const hasService = !b.serviceIds || b.serviceIds.length === 0 || b.serviceIds.includes(serviceId);
+    return hasService && isOverlapping(slotStart, slotEnd, bStart, bEnd);
+  });
+
+  // Nếu tổng số booking chạm vào khoảng này còn ít hơn số thợ, chắc chắn luôn có thợ rảnh
+  if (overlappingBookings.length < capacityLimit) {
+    return { exceeded: false, peakBusyCount: overlappingBookings.length };
+  }
+
+  // Thu thập các mốc thời gian kiểm tra: slotStart và các bStart nằm trong [slotStart, slotEnd)
+  const checkPoints = new Set<number>([slotStart]);
+  for (const b of overlappingBookings) {
+    const bStart = timeToMinutes(b.startTime);
+    if (bStart >= slotStart && bStart < slotEnd) {
+      checkPoints.add(bStart);
+    }
+  }
+
+  const sortedPoints = Array.from(checkPoints).sort((a, b) => a - b);
+  let peakBusyCount = 0;
+  let peakTime = slotStart;
+
+  for (const t of sortedPoints) {
+    let busyCount = 0;
+    for (const b of overlappingBookings) {
+      const bStart = timeToMinutes(b.startTime);
+      const bEnd = timeToMinutes(b.endTime);
+      // Khách đang được làm tại phút t (từ bStart đến trước bEnd)
+      if (bStart <= t && t < bEnd) {
+        busyCount++;
+      }
+    }
+
+    if (busyCount > peakBusyCount) {
+      peakBusyCount = busyCount;
+      peakTime = t;
+    }
+
+    if (busyCount >= capacityLimit) {
+      return {
+        exceeded: true,
+        peakBusyCount: busyCount,
+        peakTimeStr: minutesToTime(t),
+      };
+    }
+  }
+
+  return { exceeded: false, peakBusyCount, peakTimeStr: minutesToTime(peakTime) };
 }
 
 /**
  * Sinh danh sách các khung giờ trong ngày và kiểm tra tính khả dụng
- * dựa trên tổng thời lượng khách đã chọn, có tính toán sức chứa.
+ * dựa trên tổng thời lượng khách đã chọn, có tính toán sức chứa thợ theo ngày.
  */
 export function generateAvailableSlots(
   date: string,
@@ -116,25 +210,20 @@ export function generateAvailableSlots(
 
     if (selectedServiceIds.length > 0 && servicesList.length > 0) {
       for (const sId of selectedServiceIds) {
-        const service = servicesList.find(s => s.id === sId);
+        const service = servicesList.find((s) => s.id === sId);
         if (!service) continue;
 
         const capacityLimit = getServiceCapacityOnDate(service, date);
-        
-        const overlappingCount = activeBookingsOnDate.filter(b => {
-          const bStart = timeToMinutes(b.startTime);
-          const bEnd = timeToMinutes(b.endTime);
-          return isOverlapping(slotStart, slotEnd, bStart, bEnd) && b.serviceIds?.includes(sId);
-        }).length;
+        const check = isCapacityExceeded(slotStart, slotEnd, sId, capacityLimit, activeBookingsOnDate);
 
-        if (overlappingCount >= capacityLimit) {
+        if (check.exceeded) {
           hasConflict = true;
-          conflictReason = `Dịch vụ "${service.name}" đã hết chỗ lúc ${timeStr}`;
+          conflictReason = `Dịch vụ "${service.name}" đã kín lịch (tất cả ${capacityLimit} thợ đều có khách) lúc ${check.peakTimeStr}`;
           break;
         }
       }
     } else {
-      // Fallback
+      // Fallback khi chưa chọn dịch vụ cụ thể: 1 thợ phục vụ
       const conflictingBooking = activeBookingsOnDate.find((b) => {
         const bStart = timeToMinutes(b.startTime);
         const bEnd = timeToMinutes(b.endTime);
@@ -158,7 +247,7 @@ export function generateAvailableSlots(
 }
 
 /**
- * Kiểm tra xem một lịch đặt cụ thể có bị xung đột với các lịch hiện có hay không (có tính sức chứa)
+ * Kiểm tra xem một lịch đặt cụ thể có bị xung đột với các lịch hiện có hay không (có tính số thợ trực)
  */
 export function checkBookingConflict(
   date: string,
@@ -186,21 +275,16 @@ export function checkBookingConflict(
 
   if (serviceIds.length > 0 && servicesList.length > 0) {
     for (const sId of serviceIds) {
-      const service = servicesList.find(s => s.id === sId);
+      const service = servicesList.find((s) => s.id === sId);
       if (!service) continue;
 
       const capacityLimit = getServiceCapacityOnDate(service, date);
-      
-      const overlappingBookings = activeBookings.filter(b => {
-        const bStart = timeToMinutes(b.startTime);
-        const bEnd = timeToMinutes(b.endTime);
-        return isOverlapping(reqStart, reqEnd, bStart, bEnd) && b.serviceIds?.includes(sId);
-      });
+      const check = isCapacityExceeded(reqStart, reqEnd, sId, capacityLimit, activeBookings);
 
-      if (overlappingBookings.length >= capacityLimit) {
+      if (check.exceeded) {
         return {
           hasConflict: true,
-          reason: `Dịch vụ "${service.name}" đã hết chỗ lúc ${startTime}`,
+          reason: `Dịch vụ "${service.name}" đã kín lịch (tất cả ${capacityLimit} thợ đều có khách) lúc ${check.peakTimeStr}`,
         };
       }
     }

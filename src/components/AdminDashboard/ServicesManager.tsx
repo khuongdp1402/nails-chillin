@@ -201,29 +201,29 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
           <div className="sm-row">
             <div className="sm-field">
-              <span className="sm-label" id="sm-cap-label">Số khách làm cùng lúc (Mặc định)</span>
+              <span className="sm-label" id="sm-cap-label">Số thợ phục vụ cùng lúc</span>
               <div className="sm-stepper" role="group" aria-labelledby="sm-cap-label">
                 <button
                   type="button"
                   className="sm-step-btn"
                   onClick={() => set('capacity', Math.max(1, draft.capacity - 1))}
                   disabled={draft.capacity <= 1}
-                  aria-label="Giảm số khách"
+                  aria-label="Giảm số thợ"
                 >
                   <Minus size={16} aria-hidden="true" />
                 </button>
-                <output className="sm-step-val" aria-live="polite">{draft.capacity}</output>
+                <output className="sm-step-val" aria-live="polite">{draft.capacity} thợ</output>
                 <button
                   type="button"
                   className="sm-step-btn"
                   onClick={() => set('capacity', Math.min(5, draft.capacity + 1))}
                   disabled={draft.capacity >= 5}
-                  aria-label="Tăng số khách"
+                  aria-label="Tăng số thợ"
                 >
                   <Plus size={16} aria-hidden="true" />
                 </button>
               </div>
-              <p className="sm-hint">Áp dụng cho các ngày thông thường.</p>
+              <p className="sm-hint">1 thợ takecare 1 khách (1-on-1). Mặc định cho ngày thường.</p>
             </div>
             <div className="sm-field">
               <label htmlFor="sm-badge" className="sm-label">Nhãn nổi bật</label>
@@ -417,7 +417,9 @@ export function ServicesManager({ services, onServicesChanged }: ServicesManager
                     <span>{formatDuration(s.durationMinutes)}</span>
                     <span className="price">{s.price.toLocaleString('vi-VN')}đ</span>
                     {s.badge && <span className="chip sm-badge">{s.badge}</span>}
-                    {(s.capacity ?? 1) > 1 && <span className="sm-cap">{s.capacity} khách cùng lúc</span>}
+                    {(s.capacity ?? 1) > 1 && (
+                      <span className="sm-cap">{s.capacity} thợ ({s.capacity} khách cùng lúc)</span>
+                    )}
                   </div>
                 </div>
                 <div className="sm-actions">

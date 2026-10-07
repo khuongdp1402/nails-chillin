@@ -11,8 +11,8 @@ export interface Service {
   badge?: string; // e.g. "Hot Trend", "Bán chạy", "Thư giãn"
   popular?: boolean;
   showOnLanding?: boolean; // undefined = true
-  capacity?: number; // khách làm cùng lúc, mặc định 1
-  capacityOverrides?: CapacityOverride[]; // cấu hình theo ngày/thứ
+  capacity?: number; // Số nhân viên (thợ) phục vụ cùng lúc (1 thợ takecare 1 khách), mặc định 1
+  capacityOverrides?: CapacityOverride[]; // Cấu hình số thợ theo ngày/khoảng ngày/thứ
 }
 
 export interface CapacityOverride {
@@ -22,7 +22,7 @@ export interface CapacityOverride {
   endDate?: string;   // for dateRange
   date?: string;      // for single date
   weekdays?: number[]; // for weekday (0=Sun, 1=Mon, ..., 6=Sat)
-  capacity: number;
+  capacity: number; // Số nhân viên (thợ) phục vụ cùng lúc cho ngày đặc biệt
 }
 
 export interface LookbookItem {

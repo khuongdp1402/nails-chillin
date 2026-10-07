@@ -72,9 +72,9 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
   const remove = (id: string) => onChange(overrides.filter((o) => o.id !== id));
 
   const typeOptions = [
-    { value: 'date', label: 'Chỉ 1 ngày cụ thể (vd: ngày lễ, ngày khai trương...)' },
+    { value: 'date', label: 'Chỉ 1 ngày cụ thể (vd: ngày lễ, ngày tăng/giảm thợ...)' },
     { value: 'dateRange', label: 'Khoảng ngày liên tục (từ ngày... đến ngày...)' },
-    { value: 'weekday', label: 'Lặp lại theo các thứ trong tuần (vd: cuối tuần)' },
+    { value: 'weekday', label: 'Lặp lại theo các thứ trong tuần (vd: thứ 7 & chủ nhật)' },
   ];
 
   const toggleWeekday = (day: number) => {
@@ -101,10 +101,10 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
         <div>
           <h4 className="sm-capacity-title">
             <Sparkles size={16} className="text-terracotta" />
-            Giới hạn số ca / khách theo ngày đặc biệt
+            Điều chỉnh số thợ theo ngày đặc biệt
           </h4>
           <p className="sm-capacity-sub">
-            Thiết lập số ca nhận tối đa cho ngày đông khách, cuối tuần hoặc dịp lễ tết.
+            Tăng hoặc giảm số nhân viên trực phục vụ cho ngày cao điểm, cuối tuần hoặc ngày thiếu thợ (1 thợ takecare 1 khách).
           </p>
         </div>
       </div>
@@ -128,7 +128,7 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
                   {ov.type === 'weekday' && formatWeekdays(ov.weekdays)}
                 </div>
                 <div className="sm-override-badge">
-                  Tối đa: <strong>{ov.capacity} khách / ca</strong>
+                  Tối đa: <strong>{ov.capacity} thợ trực</strong> ({ov.capacity} khách cùng lúc)
                 </div>
               </div>
 
@@ -136,8 +136,8 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
                 type="button"
                 onClick={() => remove(ov.id)}
                 className="sm-override-del"
-                title="Xóa giới hạn này"
-                aria-label="Xóa giới hạn"
+                title="Xóa cấu hình này"
+                aria-label="Xóa cấu hình"
               >
                 <Trash2 size={15} />
               </button>
@@ -150,8 +150,8 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
       {adding ? (
         <div className="sm-capacity-form-box">
           <div className="sm-capacity-box-header">
-            <strong>Thêm quy định số khách cho ngày đặc biệt</strong>
-            <span className="sm-capacity-box-hint">Điền thông tin và bấm Lưu cài đặt bên dưới</span>
+            <strong>Cài đặt số thợ cho ngày đặc biệt</strong>
+            <span className="sm-capacity-box-hint">1 thợ nhận 1 khách. Tăng/giảm số thợ để tiệm nhận đúng số khách tối đa cùng lúc.</span>
           </div>
 
           <div className="sm-capacity-fields-grid">
@@ -165,7 +165,7 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
             </div>
 
             <div className="sm-field">
-              <label className="sm-label">Số khách nhận tối đa cùng một lúc:</label>
+              <label className="sm-label">Số thợ trực phục vụ cùng lúc:</label>
               <div className="sm-stepper-wide">
                 <button
                   type="button"
@@ -177,7 +177,7 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
                   <Minus size={16} />
                 </button>
                 <span className="sm-step-val-wide">
-                  <strong>{capacity}</strong> khách / ca
+                  <strong>{capacity}</strong> thợ ({capacity} khách)
                 </span>
                 <button
                   type="button"
@@ -240,14 +240,14 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
             )}
           </div>
 
-          {/* 2 nút bo tròn: Lưu cài đặt & Hủy */}
+          {/* 2 nút bo tròn: Lưu số thợ cho ngày này & Hủy */}
           <div className="sm-capacity-form-actions">
             <button
               type="button"
               className="btn btn-primary sm-pill-btn"
               onClick={handleAdd}
             >
-              Lưu cài đặt này
+              Lưu số thợ cho ngày này
             </button>
             <button
               type="button"
@@ -265,7 +265,7 @@ export function CapacityOverridesEditor({ overrides, onChange }: Props) {
           onClick={() => setAdding(true)}
         >
           <Plus size={17} />
-          <span>Thêm ngày có giới hạn số khách riêng</span>
+          <span>Thêm ngày điều chỉnh số thợ riêng</span>
         </button>
       )}
     </div>

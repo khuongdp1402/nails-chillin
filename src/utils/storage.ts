@@ -85,7 +85,7 @@ export function attemptCreateBooking(
   if (conflictCheck.hasConflict) {
     return {
       success: false,
-      error: 'Khung giờ này vừa có người đặt. Vui lòng chọn khung giờ khác.',
+      error: conflictCheck.reason || 'Khung giờ này vừa có khách đặt trước. Vui lòng chọn khung giờ khác.',
     };
   }
 
