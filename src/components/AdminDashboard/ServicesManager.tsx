@@ -134,11 +134,11 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
   return (
     <div
-      className={`sm-overlay bg-black/60 backdrop-blur-md${closing ? ' is-closing' : ''}`}
+      className={`sm-overlay${closing ? ' is-closing' : ''}`}
       onMouseDown={(e) => e.target === e.currentTarget && requestClose()}
     >
       <div
-        className="sm-drawer bg-slate-50 border border-slate-200 rounded-2xl shadow-2xl"
+        className="sm-drawer"
         role="dialog"
         aria-modal="true"
         aria-labelledby="sm-drawer-title"
@@ -147,20 +147,20 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
         <header className="sm-drawer-head">
           <div>
             <span className="sm-drawer-tag">{catLabel}</span>
-            <h3 id="sm-drawer-title" className="text-slate-900 font-bold">{editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
+            <h3 id="sm-drawer-title">{editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
           </div>
           <button type="button" className="sm-icon-btn" onClick={requestClose} aria-label="Đóng">
             <X size={18} aria-hidden="true" />
           </button>
         </header>
 
-        <form className="sm-form bg-slate-50" onSubmit={submit} noValidate>
+        <form className="sm-form" onSubmit={submit} noValidate>
           <div className="sm-field">
-            <label htmlFor="sm-name" className="text-slate-700 font-medium text-sm">Tên dịch vụ</label>
+            <label htmlFor="sm-name" className="sm-label">Tên dịch vụ</label>
             <input
               id="sm-name"
               ref={nameRef}
-              className={`ui-input bg-white text-gray-900 border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500${errors.name ? ' is-invalid' : ''}`}
+              className={`ui-input${errors.name ? ' is-invalid' : ''}`}
               value={draft.name}
               maxLength={80}
               placeholder="Ví dụ: Sơn gel thạch Hàn Quốc"
@@ -175,7 +175,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
           <div className="sm-row">
             <div className="sm-field">
-              <label htmlFor="sm-duration" className="text-slate-700 font-medium text-sm">Thời gian làm</label>
+              <label htmlFor="sm-duration" className="sm-label">Thời gian làm</label>
               <Select
                 id="sm-duration"
                 value={String(draft.durationMinutes)}
@@ -184,7 +184,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
               />
             </div>
             <div className="sm-field">
-              <label htmlFor="sm-price" className="text-slate-700 font-medium text-sm">Giá</label>
+              <label htmlFor="sm-price" className="sm-label">Giá</label>
               <PriceInput
                 id="sm-price"
                 value={draft.price}
@@ -201,7 +201,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
           <div className="sm-row">
             <div className="sm-field">
-              <span className="sm-label text-slate-700 font-medium text-sm" id="sm-cap-label">Số khách làm cùng lúc</span>
+              <span className="sm-label" id="sm-cap-label">Số khách làm cùng lúc (Mặc định)</span>
               <div className="sm-stepper" role="group" aria-labelledby="sm-cap-label">
                 <button
                   type="button"
@@ -223,15 +223,10 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
                   <Plus size={16} aria-hidden="true" />
                 </button>
               </div>
-              <p className="sm-hint">Sẽ áp dụng khi tiệm có thêm thợ.</p>
-              
-              <CapacityOverridesEditor 
-                overrides={draft.capacityOverrides} 
-                onChange={v => set('capacityOverrides', v)} 
-              />
+              <p className="sm-hint">Áp dụng cho các ngày thông thường.</p>
             </div>
             <div className="sm-field">
-              <label htmlFor="sm-badge" className="text-slate-700 font-medium text-sm">Nhãn nổi bật</label>
+              <label htmlFor="sm-badge" className="sm-label">Nhãn nổi bật</label>
               <Select
                 id="sm-badge"
                 value={draft.badge}
@@ -241,45 +236,57 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
             </div>
           </div>
 
-          <div className="sm-field">
-            <label htmlFor="sm-desc" className="text-slate-700 font-medium text-sm">Mô tả ngắn</label>
-            <textarea
-              id="sm-desc"
-              className="ui-input sm-textarea bg-white text-gray-900 border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
-              rows={3}
-              maxLength={DESC_MAX}
-              value={draft.description}
-              placeholder="Một hai câu để khách hiểu dịch vụ này gồm những gì"
-              onChange={(e) => set('description', e.target.value.slice(0, DESC_MAX))}
+          {/* Phần cài đặt giới hạn nâng cao: Mở rộng 100% bằng drawer, hiển thị 2 cột */}
+          <div className="sm-field sm-field-full">
+            <CapacityOverridesEditor 
+              overrides={draft.capacityOverrides} 
+              onChange={v => set('capacityOverrides', v)} 
             />
-            <span className="sm-counter" aria-live="polite">{draft.description.length}/{DESC_MAX}</span>
           </div>
 
-          <div className="sm-field">
-            <span className="sm-label text-slate-700 font-medium text-sm">Ảnh dịch vụ</span>
-            <div className="sm-image-box border-2 border-dashed border-slate-300 bg-slate-100 rounded-xl p-4">
-              <ImageUpload value={draft.imageUrl} onChange={(v) => set('imageUrl', v)} />
+          <div className="sm-row sm-row-bottom">
+            <div className="sm-field">
+              <label htmlFor="sm-desc" className="sm-label">Mô tả ngắn</label>
+              <textarea
+                id="sm-desc"
+                className="ui-input sm-textarea"
+                rows={3}
+                maxLength={DESC_MAX}
+                value={draft.description}
+                placeholder="Một hai câu để khách hiểu dịch vụ này gồm những gì"
+                onChange={(e) => set('description', e.target.value.slice(0, DESC_MAX))}
+              />
+              <span className="sm-counter" aria-live="polite">{draft.description.length}/{DESC_MAX}</span>
+
+              <div className="sm-toggle-field" style={{ marginTop: 10 }}>
+                <Toggle
+                  checked={draft.showOnLanding}
+                  onChange={(v) => set('showOnLanding', v)}
+                  label="Hiện trên trang chủ"
+                />
+              </div>
             </div>
-          </div>
 
-          <div className="sm-field sm-toggle-field">
-            <Toggle
-              checked={draft.showOnLanding}
-              onChange={(v) => set('showOnLanding', v)}
-              label="Hiện trên trang chủ"
-            />
+            <div className="sm-field">
+              <span className="sm-label">Ảnh dịch vụ</span>
+              <div className="sm-image-box">
+                <ImageUpload value={draft.imageUrl} onChange={(v) => set('imageUrl', v)} />
+              </div>
+            </div>
           </div>
 
           {saveError && <p className="sm-error sm-save-error" role="alert">{saveError}</p>}
 
           <footer className={`sm-bar${dirty ? ' is-ready' : ''}`}>
-            <div className="sm-bar-inner bg-white">
-              <span className="sm-bar-note text-slate-700" aria-live="polite">
+            <div className="sm-bar-inner">
+              <span className="sm-bar-note" aria-live="polite">
                 {dirty ? 'Bạn có thay đổi chưa lưu' : 'Chưa có thay đổi'}
               </span>
               <div className="sm-bar-btns">
-                <button type="button" className="sm-btn-cancel bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 font-bold rounded-full px-6 py-3 min-h-[44px]" onClick={requestClose}>Hủy</button>
-                <button type="submit" className="sm-btn-save bg-slate-900 text-white font-bold rounded-full px-6 py-3 min-h-[44px] hover:bg-slate-800 shadow-2xl">
+                <button type="button" className="sm-btn-pill-cancel" onClick={requestClose}>
+                  Hủy
+                </button>
+                <button type="submit" className="sm-btn-pill-save">
                   {editing ? 'Lưu thay đổi' : 'Thêm dịch vụ'}
                 </button>
               </div>
