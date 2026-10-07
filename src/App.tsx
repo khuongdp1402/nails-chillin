@@ -12,6 +12,7 @@ import { LookbookModal } from './components/LookbookModal';
 import { Footer } from './components/Footer';
 import { ModePicker } from './components/ModePicker';
 import { ZaloFab } from './components/ZaloFab';
+import { GoldBlingOverlay } from './components/GoldBlingOverlay';
 import { scrollToTarget } from './utils/scroll';
 
 const isAdminHash = () => window.location.hash.replace(/^#\/?/, '').startsWith('admin');
@@ -104,6 +105,7 @@ export function App() {
 
   return (
     <div className="app-layout">
+      <GoldBlingOverlay />
       <Header
         isAdminView={isAdminView}
         onScrollToBooking={handleScrollToBooking}

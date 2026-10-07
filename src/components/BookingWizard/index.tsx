@@ -314,7 +314,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
           particleCount: 90,
           spread: 80,
           origin: { y: 0.6 },
-          colors: ['#e23e68', '#b3123b', '#ffe9ef', '#c9963a', '#ffffff'],
+          colors: ['#ffffff', '#f8fafc', '#e2e8f0', '#cbd5e1', '#94a3b8', '#64748b'],
           disableForReducedMotion: true,
         });
       } catch (err) {

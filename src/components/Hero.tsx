@@ -4,7 +4,7 @@ import { getStoredServices } from '../data/services';
 import { getMinHints, formatPrice } from '../utils/servicesSummary';
 import type { PriceHint } from '../utils/servicesSummary';
 import { formatDuration } from '../utils/scheduler';
-import { Calendar, Clock, Images, MapPin, MessageCircle, Sparkles } from 'lucide-react';
+import { Calendar, Clock, Images, MapPin, MessageCircle, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMode } from '../context/ModeContext';
 import type { ServiceMode } from '../context/ModeContext';
 import { SITE, zaloLink } from '../data/site';
@@ -306,17 +306,35 @@ export const Hero: React.FC<HeroProps> = ({
                 </div>
               </div>
 
-              <div className="hx-car-dots">
-                {slides.map((slide, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`hx-car-dot ${i === current ? 'is-active' : ''}`}
-                    aria-label={`Xem mẫu ${i + 1}: ${slide.name}`}
-                    aria-current={i === current ? 'true' : undefined}
-                    onClick={() => goTo(i)}
-                  />
-                ))}
+              <div className="hx-car-controls">
+                <button
+                  type="button"
+                  className="hx-car-arrow hx-car-prev"
+                  aria-label="Mẫu trước"
+                  onClick={() => goTo(current - 1)}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                <div className="hx-car-dots">
+                  {slides.map((slide, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`hx-car-dot ${i === current ? 'is-active' : ''}`}
+                      aria-label={`Xem mẫu ${i + 1}: ${slide.name}`}
+                      aria-current={i === current ? 'true' : undefined}
+                      onClick={() => goTo(i)}
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  className="hx-car-arrow hx-car-next"
+                  aria-label="Mẫu kế tiếp"
+                  onClick={() => goTo(current + 1)}
+                >
+                  <ChevronRight size={16} />
+                </button>
               </div>
             </div>
           )}

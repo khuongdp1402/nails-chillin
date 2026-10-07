@@ -1,20 +1,25 @@
 /* Chrome: header, mode picker, zalo fab (prefix ch-) */
 
 .site-header.ch-header {
-  background: rgba(255, 246, 248, 0.88);
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   padding: 10px 0;
-  border-bottom: 0;
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.9);
   border-radius: 0 0 28px 28px;
-  box-shadow: 0 10px 28px -14px rgba(120, 20, 50, 0.28);
+  box-shadow: 0 10px 30px -10px rgba(100, 116, 139, 0.18), 0 0 20px rgba(255, 255, 255, 0.8);
 }
 .ch-header .header-inner {
   gap: 10px;
 }
 .ch-header .brand-icon {
-  background: var(--gradient-cta);
+  background: var(--gradient-silver-bling);
+  border: 1.5px solid #ffffff;
+  color: #0f172a;
   width: 40px;
   height: 40px;
   flex-shrink: 0;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.9);
 }
 .ch-header .brand-name { font-size: 1.4rem; line-height: 1.2; }
 .ch-header .brand-sub { display: none; }
@@ -27,21 +32,22 @@
   min-height: 44px;
   padding: 0 14px;
   border-radius: var(--radius-pill);
-  border: 1.5px solid var(--border-strong);
-  background: var(--bg-card);
-  color: var(--accent-rose-dark);
+  border: 1.5px solid #ffffff;
+  background: rgba(255, 255, 255, 0.9);
+  color: #0f172a;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.05rem;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(100, 116, 139, 0.15), 0 0 10px rgba(255, 255, 255, 0.8);
   transition: transform var(--dur-fast) var(--ease-lux), box-shadow var(--dur-fast) var(--ease-lux),
     background var(--dur-fast) var(--ease-lux);
 }
 .ch-chip:hover {
   transform: translateY(-2px);
-  background: var(--bg-surface);
-  box-shadow: var(--shadow-glow);
+  background: #ffffff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 1), 0 4px 14px rgba(100, 116, 139, 0.25);
 }
 .ch-chip svg { transition: transform var(--dur-fast) var(--ease-lux); }
 .ch-chip:hover svg:last-child { transform: translateY(2px); }
@@ -71,8 +77,8 @@
 .site-header.ch-header.is-compact {
   padding: 6px 0;
   border-radius: 0 0 20px 20px;
-  background: rgba(255, 246, 248, 0.94);
-  box-shadow: 0 8px 20px -12px rgba(120, 20, 50, 0.3);
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 8px 24px -10px rgba(100, 116, 139, 0.25), 0 0 15px rgba(255, 255, 255, 0.9);
 }
 .ch-header.is-compact .brand-icon { width: 32px; height: 32px; }
 .ch-header.is-compact .brand-name { font-size: 1.25rem; }
@@ -195,9 +201,10 @@
   border-radius: var(--radius-pill);
   display: grid;
   place-items: center;
-  color: var(--text-on-accent);
-  background: var(--gradient-cta);
-  box-shadow: var(--shadow-glow);
+  color: #0f172a;
+  background: var(--gradient-silver-bling);
+  border: 2px solid #ffffff;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
 }
 .ch-card-title {
   font-family: var(--font-heading);
@@ -253,21 +260,21 @@
   border-radius: var(--radius-pill);
   display: grid;
   place-items: center;
-  background: linear-gradient(135deg, #ff758c 0%, #ffffff 32%, #ff6b8b 60%, #c8102e 100%);
-  color: #c8102e;
-  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  background: var(--gradient-silver-bling);
+  color: #0f172a;
+  border: 2px solid #ffffff;
   font-family: var(--font-body);
   font-weight: 800;
   font-size: 0.95rem;
   letter-spacing: -0.02em;
-  box-shadow: 0 10px 26px -6px rgba(200, 16, 46, 0.45);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 8px 24px rgba(100, 116, 139, 0.4);
   transition: transform var(--dur-fast) var(--ease-lux), box-shadow var(--dur-fast) var(--ease-lux);
   animation: ch-pulse 2.6s ease-out infinite;
 }
 .ch-zalo:hover .ch-zalo-btn,
 .ch-zalo:focus-visible .ch-zalo-btn {
   transform: translateY(-3px) scale(1.05);
-  box-shadow: 0 16px 34px -6px rgba(200, 16, 46, 0.65);
+  box-shadow: 0 0 35px rgba(255, 255, 255, 1), 0 12px 30px rgba(71, 85, 105, 0.5);
 }
 .ch-zalo:focus-visible { outline: none; }
 .ch-zalo-tip {
@@ -291,8 +298,8 @@
 .ch-zalo:hover .ch-zalo-tip,
 .ch-zalo:focus-visible .ch-zalo-tip { opacity: 1; transform: translate(0, -50%); }
 @keyframes ch-pulse {
-  0% { box-shadow: 0 10px 26px -6px rgba(200, 16, 46, 0.45), 0 0 0 0 rgba(230, 57, 70, 0.4); }
-  70%, 100% { box-shadow: 0 10px 26px -6px rgba(200, 16, 46, 0.45), 0 0 0 16px rgba(230, 57, 70, 0); }
+  0% { box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 0 0 0 rgba(255, 255, 255, 0.9); }
+  70%, 100% { box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 0 0 18px rgba(255, 255, 255, 0); }
 }
 
 @media (max-width: 560px) {

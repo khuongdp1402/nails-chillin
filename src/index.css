@@ -1,56 +1,135 @@
 /* ==========================================================================
-   AURA NAILS & SPA — SOFT-PINK DESIGN SYSTEM
-   Warm pastel blush canvas, elegant script accents, Instagram-editorial aesthetic.
-   Soft shadows, rounded typography (Playfair Display, Dancing Script, Be Vietnam Pro).
+   AURA NAILS & SPA — SLATE BLUE-GRAY & DIAMOND SILVER DESIGN SYSTEM
+   Modern cool blue-gray palette ("xám xanh") with brilliant silver
+   rhinestone pavé glints, polished chrome, and frosty platinum accents.
    ========================================================================== */
 
 :root {
-  /* Canvas & Surfaces — luxurious ombre blush */
-  --bg-main: #fff6f8;
-  --bg-card: #ffffff;
-  --bg-surface: #ffe9ef;
-  --bg-card-hover: #fff0f4;
+  /* Canvas & Surfaces — Luminous Cool Slate Blue-Gray (Xám Xanh) & Crisp Pearl */
+  --bg-main: #edf2f7;
+  --bg-card: rgba(255, 255, 255, 0.94);
+  --bg-surface: #e2e8f0;
+  --bg-card-hover: #ffffff;
 
-  /* Accents */
-  --accent-rose: #e23e68;
-  --accent-rose-dark: #b3123b;
-  --accent-red: #c8102e;
-  --accent-red-bg: rgba(200, 16, 46, 0.1);
-  --accent-gold: #c9963a;
-  --accent-gold-dark: #8f6420;
+  /* Metallic Silver & Platinum Accents */
+  --silver-bright: #ffffff;
+  --silver-sparkle: #f8fafc;
+  --silver-light: #edf2f7;
+  --silver-metal: #cbd5e1;
+  --silver-chrome: #94a3b8;
+  --silver-deep: #475569;
+  --silver-dark: #1e293b;
 
-  /* Legacy token aliases — kept so pre-redesign components still resolve */
-  --accent-emerald: var(--accent-rose-dark);
-  --text-gold: var(--accent-gold-dark);
+  /* Cool Slate Blue-Gray (Xám Xanh) Accents */
+  --slate-blue-primary: #334e68;
+  --slate-blue-dark: #1e293b;
+  --slate-blue-light: #486581;
+  --slate-blue-ice: #627d98;
+  --slate-blue-glow: rgba(51, 78, 104, 0.12);
+
+  /* Silver & Slate Borders & Diamond Glow */
+  --silver-border-thin: rgba(148, 163, 184, 0.45);
+  --silver-border-bright: rgba(100, 116, 139, 0.7);
+  --silver-diamond-glow: 0 0 14px rgba(255, 255, 255, 1), 0 0 8px rgba(148, 163, 184, 0.45);
+
+  /* Legacy aliases mapped to elegant silver & slate blue-gray */
+  --gold-champagne: #cbd5e1;
+  --gold-accent: #486581;
+  --gold-bronze: #334e68;
+  --gold-sparkle: #e2e8f0;
+  --gold-border-thin: var(--silver-border-thin);
+  --gold-border-bright: var(--silver-border-bright);
+  --gold-diamond-glow: var(--silver-diamond-glow);
+
+  --accent-rose: #475569;
+  --accent-rose-dark: #1e293b;
+  --accent-silver: #cbd5e1;
+  --accent-silver-dark: #1e293b;
+  --accent-red: #e11d48;
+  --accent-red-bg: rgba(225, 29, 72, 0.08);
+
+  --accent-gold: var(--slate-blue-light);
+  --accent-gold-dark: var(--slate-blue-dark);
+  --accent-emerald: var(--slate-blue-primary);
+  --text-gold: var(--slate-blue-primary);
   --radius-full: var(--radius-pill);
 
-  /* Typography colors */
-  --text-main: #3a1220;
-  --text-muted: #7a5560;
-  --text-dim: #8a6a74;
-  --text-on-accent: #ffffff;
-  --price-color: #c8102e;
+  /* Typography — Refined Slate Charcoal */
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  --text-on-accent: #1e293b;
+  --price-color: #0f172a;
 
-  /* Borders */
-  --border-subtle: #f5d3dc;
-  --border-strong: #eaa9ba;
+  /* Borders — Fine Shimmering Silver & Crisp White */
+  --border-subtle: rgba(148, 163, 184, 0.35);
+  --border-strong: rgba(100, 116, 139, 0.55);
+  --border-silver: #ffffff;
 
-  /* Gradients */
-  --gradient-ombre: linear-gradient(135deg, #ffc2d1 0%, #fff6f8 40%, #ff6f8e 70%, #c8102e 100%);
-  --gradient-cta: linear-gradient(135deg, #e23e68, #b3123b);
-  --gradient-cta-hover: linear-gradient(135deg, #ee4d78, #c8102e);
-  --gradient-soft: linear-gradient(180deg, #ffe9ef, #ffffff);
-  /* Hero: light on the text side (dark wine text >= 4.5:1), deeper pink to red on the photo side */
-  --gradient-hero: linear-gradient(100deg, #ffc2d1 0%, #fff6f8 26%, #fff6f8 46%, #ff8fa8 66%, #e23e68 84%, #c8102e 100%);
-  --gradient-hero-mobile: linear-gradient(180deg, #ffc2d1 0%, #fff6f8 24%, #fff6f8 46%, #ff8fa8 68%, #e23e68 100%);
-  /* Footer: soft pink ombre, dark wine text stays >= 6:1 on every stop */
-  --gradient-footer: linear-gradient(180deg, #ffeaf0 0%, #ffcbd8 38%, #ffa9bd 74%, #ff93ad 100%);
+  /* Gradients — Cool Slate Blue-Gray & Silver Chrome */
+  --gradient-silver-bling: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f1f5f9 35%,
+    #cbd5e1 65%,
+    #ffffff 100%
+  );
 
-  /* Elevation */
-  --shadow-soft: 0 10px 30px -12px rgba(120, 20, 50, 0.2);
-  --shadow-card: 0 6px 20px -8px rgba(120, 20, 50, 0.16);
-  --shadow-lift: 0 18px 44px -14px rgba(179, 18, 59, 0.32);
-  --shadow-glow: 0 10px 30px -6px rgba(226, 62, 104, 0.5);
+  --gradient-chrome-metal: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #edf2f7 40%,
+    #cbd5e1 70%,
+    #ffffff 100%
+  );
+
+  --gradient-cta: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f1f5f9 40%,
+    #e2e8f0 70%,
+    #ffffff 100%
+  );
+
+  --gradient-cta-hover: linear-gradient(
+    135deg,
+    #ffffff 0%,
+    #f8fafc 50%,
+    #ffffff 100%
+  );
+
+  --gradient-hero: linear-gradient(
+    125deg,
+    #e8eff6 0%,
+    #edf2f7 35%,
+    #e2e8f0 70%,
+    #cbd5e1 100%
+  );
+
+  --gradient-hero-mobile: linear-gradient(
+    180deg,
+    #f1f5f9 0%,
+    #edf2f7 40%,
+    #e2e8f0 75%,
+    #cbd5e1 100%
+  );
+
+  --gradient-footer: linear-gradient(
+    180deg,
+    #edf2f7 0%,
+    #e2e8f0 45%,
+    #cbd5e1 100%
+  );
+
+  --gradient-ombre: var(--gradient-silver-bling);
+  --gradient-soft: linear-gradient(180deg, #edf2f7, #ffffff);
+
+  /* Diamond Shadows & Shimmer Glow */
+  --shadow-soft: 0 10px 30px -10px rgba(100, 116, 139, 0.15);
+  --shadow-card: 0 8px 26px -6px rgba(100, 116, 139, 0.14), 0 0 0 1px rgba(148, 163, 184, 0.3);
+  --shadow-lift: 0 16px 40px -8px rgba(71, 85, 105, 0.22), 0 0 24px rgba(255, 255, 255, 0.95);
+  --shadow-glow: 0 0 25px rgba(255, 255, 255, 1), 0 4px 18px rgba(100, 116, 139, 0.25);
+  --shadow-silver-bling: 0 0 30px rgba(255, 255, 255, 1), 0 0 12px rgba(148, 163, 184, 0.4);
 
   /* Fonts */
   --font-display: 'Playfair Display', Georgia, serif;
@@ -86,7 +165,28 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: var(--bg-main);
+  background-color: #dbe4ee;
+  background-image:
+    /* Luminous frosted silver mist overlay for high contrast and legibility */
+    linear-gradient(
+      180deg,
+      rgba(241, 245, 249, 0.78) 0%,
+      rgba(235, 241, 248, 0.70) 35%,
+      rgba(226, 232, 240, 0.72) 70%,
+      rgba(215, 226, 238, 0.80) 100%
+    ),
+    radial-gradient(
+      ellipse at 50% 12%,
+      rgba(255, 255, 255, 0.65) 0%,
+      rgba(219, 234, 254, 0.25) 50%,
+      transparent 80%
+    ),
+    /* Exact sparkling silver glitter texture matching user's photo */
+    url('/silver-glitter-hd.webp');
+  background-size: cover, cover, cover;
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
   color: var(--text-main);
   line-height: 1.6;
   overflow-x: hidden;
@@ -105,14 +205,21 @@ h4 {
 
 .script-text {
   font-family: var(--font-script);
-  font-weight: 600;
-  color: var(--accent-rose-dark);
+  font-weight: 700;
+  color: var(--slate-blue-primary);
+  text-shadow: 0 0 14px rgba(255, 255, 255, 1), 0 0 20px rgba(100, 116, 139, 0.2);
 }
 
 .gold-gradient-text,
-.emerald-gradient-text {
-  color: var(--accent-rose-dark);
+.emerald-gradient-text,
+.silver-bling-text {
+  background: linear-gradient(135deg, #0f172a 0%, #334e68 40%, #1e293b 70%, #486581 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
   display: inline-block;
+  font-weight: 800;
+  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.95));
 }
 
 p {
@@ -131,11 +238,10 @@ p {
   justify-content: center;
   gap: 8px;
   font-family: var(--font-body);
-  font-weight: 600;
+  font-weight: 700;
   font-size: 0.92rem;
   padding: 13px 26px;
   border-radius: var(--radius-pill);
-  border: 1px solid transparent;
   cursor: pointer;
   text-decoration: none;
   transition: transform var(--dur-fast) var(--ease-lux), box-shadow var(--dur-fast) var(--ease-lux),
@@ -148,16 +254,77 @@ p {
   transform: scale(0.98);
 }
 
+/* Luxury Solid Light Grey-White CTA Button with Sparkling Silver Border */
 .btn-primary {
+  position: relative;
   background: var(--gradient-cta);
-  color: var(--text-on-accent);
-  box-shadow: var(--shadow-card);
+  color: #1e293b;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  border: 1.5px solid var(--silver-border-bright);
+  box-shadow:
+    0 0 10px rgba(255, 255, 255, 0.95),
+    0 3px 12px rgba(100, 116, 139, 0.18),
+    0 0 6px rgba(148, 163, 184, 0.4);
+  overflow: hidden;
+  text-shadow: none;
+}
+
+/* Tiny diamond sparkle pinpoint */
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  right: 12px;
+  width: 6px;
+  height: 6px;
+  background: radial-gradient(circle, #ffffff 40%, rgba(203, 213, 225, 0.9) 80%, transparent 100%);
+  border-radius: 50%;
+  box-shadow: 0 0 8px #ffffff, 0 0 5px #cbd5e1;
+  pointer-events: none;
+  animation: diamond-sparkle-pulse 2.2s infinite ease-in-out;
+}
+
+@keyframes diamond-sparkle-pulse {
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.3); }
+}
+
+/* Mirror-like light sweep effect (ánh gương chiếu) sweeping across every 3.5 seconds */
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -100%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.85) 45%,
+    rgba(255, 255, 255, 1) 50%,
+    rgba(255, 255, 255, 0.85) 55%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: rotate(25deg);
+  pointer-events: none;
+  animation: bling-mirror-sweep 3.5s infinite var(--ease-lux);
+}
+
+@keyframes bling-mirror-sweep {
+  0%, 20% { transform: translateX(-150%) rotate(25deg); }
+  45%, 100% { transform: translateX(380%) rotate(25deg); }
 }
 
 .btn-primary:hover:not(:disabled) {
   background: var(--gradient-cta-hover);
+  border-color: rgba(100, 116, 139, 0.95);
+  color: #0f172a;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-glow);
+  box-shadow:
+    0 0 18px rgba(255, 255, 255, 1),
+    0 4px 18px rgba(100, 116, 139, 0.22),
+    0 0 8px rgba(148, 163, 184, 0.55);
 }
 
 .btn-primary:active:not(:disabled) {
@@ -173,45 +340,58 @@ p {
 }
 
 .btn-secondary {
-  background: #ffffff;
-  color: var(--accent-rose-dark);
-  border: 1.5px solid var(--border-strong);
+  position: relative;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  color: #334155;
+  border: 1.5px solid var(--silver-border-thin);
+  box-shadow: 0 2px 10px rgba(148, 163, 184, 0.12), 0 0 8px rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+  overflow: hidden;
 }
 
 .btn-secondary:hover:not(:disabled) {
-  background: var(--bg-surface);
-  border-color: var(--accent-rose);
+  background: #ffffff;
+  border-color: var(--silver-border-bright);
+  color: #0f172a;
+  box-shadow: 0 4px 16px rgba(148, 163, 184, 0.2), 0 0 16px rgba(255, 255, 255, 1);
+  transform: translateY(-2px);
 }
 
 .btn-ghost {
   background: transparent;
-  color: var(--accent-rose-dark);
+  color: #334155;
   border: 1.5px solid transparent;
 }
 
 .btn-ghost:hover:not(:disabled) {
-  background: var(--bg-surface);
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--silver-border-thin);
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9);
+  color: #0f172a;
 }
 
 .chip {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 4px 12px;
+  padding: 4px 14px;
   border-radius: var(--radius-pill);
-  background: var(--bg-surface);
-  color: var(--accent-rose-dark);
-  border: 1px solid var(--border-subtle);
+  background: var(--gradient-silver-bling);
+  color: #0f172a;
+  border: 1px solid #ffffff;
   font-family: var(--font-heading);
   font-size: 0.9rem;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.9), 0 2px 8px rgba(100, 116, 139, 0.2);
 }
 
 .price {
   font-family: var(--font-heading);
   color: var(--price-color);
-  font-weight: 700;
+  font-weight: 800;
 }
 
 .reveal {
@@ -283,10 +463,11 @@ p {
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(253, 243, 241, 0.85);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border-subtle);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 20px rgba(100, 116, 139, 0.12), 0 0 20px rgba(255, 255, 255, 0.8);
   padding: 16px 0;
 }
 
@@ -308,12 +489,14 @@ p {
   width: 44px;
   height: 44px;
   border-radius: var(--radius-md);
-  background: var(--accent-rose);
+  background: var(--gradient-silver-bling);
+  border: 2px solid #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 20px;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 4px 15px rgba(100, 116, 139, 0.3);
+  color: #0f172a;
 }
 
 .brand-name {
@@ -326,9 +509,10 @@ p {
 
 .brand-sub {
   font-size: 0.72rem;
-  color: var(--accent-rose-dark);
-  letter-spacing: 0.1em;
+  color: #475569;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
+  font-weight: 600;
 }
 
 .header-actions {
@@ -348,9 +532,10 @@ p {
 .section-tag {
   display: inline-block;
   font-family: var(--font-script);
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: var(--accent-rose-dark);
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #1e293b;
+  text-shadow: 0 0 16px rgba(255, 255, 255, 1);
   margin-bottom: 8px;
 }
 
