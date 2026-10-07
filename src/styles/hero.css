@@ -35,6 +35,7 @@
   left: 0;
   bottom: -1px;
   z-index: 2;
+  display: none;
 }
 
 .hx-orb {
@@ -468,12 +469,17 @@
   --hx-wave-h: clamp(36px, 5vw, 72px);
   position: relative;
   background: var(--gradient-footer);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border-top: 1.5px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 -10px 30px rgba(255, 255, 255, 0.4);
   color: var(--text-main);
 }
 .hx-footer-wave {
   position: absolute;
   left: 0;
   top: -1px;
+  display: none;
 }
 .container.hx-footer-top {
   padding-top: calc(var(--hx-wave-h) + 24px);
