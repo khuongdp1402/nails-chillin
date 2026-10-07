@@ -53,8 +53,8 @@ export function isOverlapping(
 }
 
 /**
- * Lấy số nhân viên (thợ) phục vụ tối đa cho dịch vụ vào ngày chỉ định
- * (Mô hình: 1 thợ takecare 1 khách 1-on-1 suốt thời gian làm)
+ * Lấy số khách có thể nhận tối đa cho dịch vụ trong 1 khung giờ vào ngày chỉ định
+ * (Tự hiểu 1 khách 1 thợ trong 1 ca, mở N khách tương ứng có N thợ takecare)
  */
 export function getServiceCapacityOnDate(service: Service, dateIso: string): number {
   const defaultCapacity = service.capacity || 1;
@@ -94,13 +94,13 @@ export function getServiceCapacityOnDate(service: Service, dateIso: string): num
 }
 
 /**
- * Kiểm tra xem trong khoảng thời gian [slotStart, slotEnd), dịch vụ serviceId có bị thiếu thợ hay không.
+ * Kiểm tra xem trong khoảng thời gian [slotStart, slotEnd), dịch vụ serviceId có bị kín chỗ hay không.
  *
  * Bản chất vận hành salon:
- * - 1 dịch vụ = 1 khách = 1 thợ phục vụ riêng biệt suốt ca làm việc.
- * - capacityLimit = số lượng thợ trực nhận làm dịch vụ này trong ngày (mặc định hoặc theo ngày đặc biệt).
+ * - 1 khách 1 thợ trong 1 ca làm việc.
+ * - capacityLimit = số khách tối đa phục vụ cùng 1 khung giờ (mặc định hoặc theo ngày đặc biệt).
  * - Một khung giờ [slotStart, slotEnd) chỉ bị xem là KÍN LỊCH khi và chỉ khi TẠI MỘT THỜI ĐIỂM BẤT KỲ t trong ca,
- *   tất cả capacityLimit thợ đều đang bận chăm sóc các khách khác.
+ *   số lượng khách đang phục vụ đạt tới capacityLimit.
  *
  * Thuật toán kiểm tra đỉnh điểm đồng thời (Peak Concurrency Check):
  * - Concurrency chỉ tăng lên tại slotStart hoặc tại thời điểm bắt đầu của một booking khác trong ca.
@@ -218,12 +218,12 @@ export function generateAvailableSlots(
 
         if (check.exceeded) {
           hasConflict = true;
-          conflictReason = `Dịch vụ "${service.name}" đã kín lịch (tất cả ${capacityLimit} thợ đều có khách) lúc ${check.peakTimeStr}`;
+          conflictReason = `Dịch vụ "${service.name}" đã kín lịch (tối đa ${capacityLimit} khách/khung giờ) lúc ${check.peakTimeStr}`;
           break;
         }
       }
     } else {
-      // Fallback khi chưa chọn dịch vụ cụ thể: 1 thợ phục vụ
+      // Fallback khi chưa chọn dịch vụ cụ thể: 1 khách 1 ca
       const conflictingBooking = activeBookingsOnDate.find((b) => {
         const bStart = timeToMinutes(b.startTime);
         const bEnd = timeToMinutes(b.endTime);
@@ -247,7 +247,7 @@ export function generateAvailableSlots(
 }
 
 /**
- * Kiểm tra xem một lịch đặt cụ thể có bị xung đột với các lịch hiện có hay không (có tính số thợ trực)
+ * Kiểm tra xem một lịch đặt cụ thể có bị xung đột với các lịch hiện có hay không (có tính số khách/khung giờ)
  */
 export function checkBookingConflict(
   date: string,
@@ -284,7 +284,7 @@ export function checkBookingConflict(
       if (check.exceeded) {
         return {
           hasConflict: true,
-          reason: `Dịch vụ "${service.name}" đã kín lịch (tất cả ${capacityLimit} thợ đều có khách) lúc ${check.peakTimeStr}`,
+          reason: `Dịch vụ "${service.name}" đã kín lịch (tối đa ${capacityLimit} khách/khung giờ) lúc ${check.peakTimeStr}`,
         };
       }
     }
