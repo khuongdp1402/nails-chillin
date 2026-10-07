@@ -7,11 +7,9 @@
   align-items: center;
   min-height: clamp(560px, 80vh, 780px);
   padding: 48px 0 calc(var(--hx-wave-h) + 24px);
-  background: var(--gradient-hero);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   isolation: isolate;
-  --hx-wave-h: clamp(44px, 6vw, 96px);
+  --hx-wave-h: 0px;
 }
 
 /* Full-bleed background, wide inner content */
@@ -409,11 +407,11 @@
   min-width: 0;
   padding: 16px 20px;
   border-radius: var(--radius-card);
-  background: rgba(255, 255, 255, 0.88);
+  background: var(--bg-card);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  border: 1px solid var(--gold-border-thin);
-  box-shadow: 0 4px 18px -2px rgba(148, 163, 184, 0.12), inset 0 0 12px rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-card);
   transition: transform var(--dur) var(--ease-lux), box-shadow var(--dur) var(--ease-lux), border-color var(--dur) var(--ease-lux);
 }
 .hx-feature:hover {
@@ -468,11 +466,8 @@
 .hx-footer {
   --hx-wave-h: clamp(36px, 5vw, 72px);
   position: relative;
-  background: var(--gradient-footer);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
-  border-top: 1.5px solid rgba(255, 255, 255, 0.7);
-  box-shadow: 0 -10px 30px rgba(255, 255, 255, 0.4);
+  background: transparent;
+  border-top: 1.5px solid rgba(255, 255, 255, 0.2);
   color: var(--text-main);
 }
 .hx-footer-wave {

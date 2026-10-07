@@ -1,5 +1,5 @@
 export const SITE = {
-  name: 'Aura Nails & Spa',
+  name: 'CHILLIN Nail & Spa',
   phoneDisplay: '0901 234 567',
   zaloPhone: '0901234567',
   address: '123 Đường Hoa Hồng, Quận 1, TP. Hồ Chí Minh',

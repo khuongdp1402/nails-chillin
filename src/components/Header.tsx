@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Sparkles, CalendarDays, ChevronDown } from 'lucide-react';
+import { CalendarDays, ChevronDown } from 'lucide-react';
 import '../styles/chrome.css';
 import { useMode } from '../context/ModeContext';
 
@@ -40,11 +40,9 @@ export const Header: React.FC<HeaderProps> = ({ onScrollToBooking, onGoHome, onO
     <header className={`site-header ch-header${compact ? ' is-compact' : ''}`}>
       <div className="container header-inner">
         <a href="#" className="brand-logo" onClick={(e) => { e.preventDefault(); onGoHome(); }}>
-          <div className="brand-icon">
-            <Sparkles size={20} color="var(--text-on-accent)" />
-          </div>
+          <img src="/chillin-logo.jpg" alt="CHILLIN Logo" className="brand-icon-img" style={{ height: '32px', borderRadius: '4px', objectFit: 'contain' }} />
           <div>
-            <div className="brand-name">AURA NAILS</div>
+            <div className="brand-name">CHILLIN</div>
             <div className="brand-sub">Nail &amp; Gội đầu dưỡng sinh</div>
           </div>
         </a>

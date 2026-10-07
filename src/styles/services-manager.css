@@ -5,8 +5,8 @@
   width: 100%;
   font: inherit;
   font-size: 16px;
-  color: var(--text-main);
-  background: var(--bg-card);
+  color: #4a3f35;
+  background: rgba(255, 255, 255, 0.7);
   border: 1.5px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   min-height: 44px;
@@ -355,8 +355,9 @@
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: rgba(58, 18, 32, 0.45);
-  backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
   animation: sm-fade var(--dur-fast) var(--ease-lux);
 }
 .sm-overlay.is-closing { opacity: 0; transition: opacity 0.22s var(--ease-lux); }
@@ -366,35 +367,59 @@
   max-height: 92dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  background: var(--bg-card);
-  border-radius: var(--radius-card) var(--radius-card) 0 0;
+  background: #F0F4F8;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
   padding: 20px 16px calc(20px + env(safe-area-inset-bottom, 0px));
-  box-shadow: var(--shadow-lift);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.35);
   animation: sm-sheet var(--dur) var(--ease-lux);
+  color: #0f172a;
 }
 .sm-overlay.is-closing .sm-drawer { transform: translateY(24px); transition: transform 0.22s var(--ease-lux); }
 .sm-drawer-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-.sm-drawer-head h3 { font-family: var(--font-heading); font-size: 1.7rem; line-height: 1.15; margin-top: 4px; }
+.sm-drawer-head h3 { font-family: var(--font-heading); font-size: 1.7rem; line-height: 1.15; margin-top: 4px; color: #0f172a; }
 .sm-drawer-tag {
   display: inline-block;
   font-size: 0.72rem;
   font-weight: 600;
   padding: 3px 12px;
   border-radius: var(--radius-pill);
-  background: var(--bg-surface);
-  color: var(--accent-rose-dark);
+  background: #e2e8f0;
+  color: #334155;
 }
-.sm-form { display: flex; flex-direction: column; gap: 16px; }
+.sm-drawer .sm-form { display: flex; flex-direction: column; gap: 16px; padding-bottom: 72px; background: #F0F4F8; }
 .sm-row { display: grid; grid-template-columns: 1fr; gap: 16px; }
 .sm-field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-.sm-field > label,
-.sm-label { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+.sm-drawer .sm-field > label,
+.sm-drawer .sm-label { font-size: 0.85rem; font-weight: 500; color: #334155; }
+.sm-drawer .ui-input,
+.sm-drawer .ui-price,
+.sm-drawer .ui-select-btn {
+  background: #ffffff;
+  color: #111827;
+  border: 1px solid #cbd5e1;
+}
+.sm-drawer .ui-input::placeholder { color: #94a3b8; }
+.sm-drawer .ui-input:focus,
+.sm-drawer .ui-price:focus-within,
+.sm-drawer .ui-select-btn:focus-visible,
+.sm-drawer .ui-select.is-open .ui-select-btn {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 1px #3b82f6;
+}
+.sm-drawer .ui-price-input { color: #111827; }
+.sm-drawer .ui-price-suffix { color: #475569; }
+.sm-drawer .ui-select-placeholder { color: #94a3b8; }
 .sm-textarea { resize: vertical; min-height: 84px; }
-.sm-counter { align-self: flex-end; font-size: 0.76rem; color: var(--text-dim); }
-.sm-error { color: var(--accent-red); font-size: 0.82rem; }
-.sm-hint { color: var(--text-muted); font-size: 0.78rem; margin: 6px 0 0; }
-.sm-save-error { padding: 12px 14px; background: var(--accent-red-bg); border-radius: var(--radius-md); }
-.sm-toggle-field { padding: 10px 12px; background: var(--bg-surface); border-radius: var(--radius-md); align-items: flex-start; }
+.sm-drawer .sm-counter { align-self: flex-end; font-size: 0.76rem; color: #64748b; }
+.sm-error { color: #dc2626; font-size: 0.82rem; }
+.sm-drawer .sm-hint { color: #475569; font-size: 0.78rem; margin: 6px 0 0; }
+.sm-save-error { padding: 12px 14px; background: #fef2f2; border-radius: var(--radius-md); }
+.sm-drawer .sm-toggle-field { padding: 10px 12px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: var(--radius-md); align-items: flex-start; color: #334155; }
+.sm-drawer .ui-toggle { color: #334155; }
+.sm-drawer .ui-upload-drop { background: #f1f5f9; border-color: #cbd5e1; color: #475569; }
+.sm-drawer .ui-upload-drop strong { color: #0f172a; }
 
 .sm-stepper {
   display: inline-flex;
@@ -402,7 +427,7 @@
   align-self: flex-start;
   gap: 6px;
   padding: 4px;
-  background: var(--bg-surface);
+  background: #e2e8f0;
   border-radius: var(--radius-pill);
 }
 .sm-step-btn {
@@ -448,11 +473,42 @@
   padding: 8px 8px 8px 16px;
   border-radius: 24px;
   background: #ffffff;
+  border: 1px solid #e2e8f0;
 }
-.sm-bar-note { font-size: 0.8rem; color: var(--text-muted); }
-.sm-bar.is-ready .sm-bar-note { color: var(--accent-rose-dark); font-weight: 600; }
+.sm-drawer .sm-bar-note { font-size: 0.8rem; color: #475569; }
+.sm-bar.is-ready .sm-bar-note { color: #0f172a; font-weight: 600; }
 .sm-bar-btns { display: flex; gap: 8px; flex: 1 1 auto; justify-content: flex-end; }
 .sm-bar-btns .btn { min-height: 44px; flex: 1 1 auto; justify-content: center; white-space: nowrap; }
+.sm-btn-cancel {
+  font: inherit;
+  background: #ffffff;
+  color: #334155;
+  border: 1px solid #cbd5e1;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-lux);
+}
+.sm-btn-cancel:hover { background: #f8fafc; }
+.sm-btn-save {
+  font: inherit;
+  background: #0f172a;
+  color: #ffffff;
+  border: 1px solid #0f172a;
+  cursor: pointer;
+  box-shadow: 0 10px 25px -8px rgba(15, 23, 42, 0.5);
+  transition: background var(--dur-fast) var(--ease-lux);
+}
+.sm-btn-save:hover { background: #1e293b; }
+.sm-drawer .sm-step-btn { background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; }
+.sm-drawer .sm-step-btn:hover:not(:disabled) { background: #0f172a; color: #ffffff; }
+.sm-drawer .sm-step-val { color: #0f172a; }
+.sm-drawer .sm-icon-btn { background: #e2e8f0; color: #0f172a; }
+.sm-drawer .sm-icon-btn:hover { background: #0f172a; color: #ffffff; }
+.sm-image-box {
+  border: 2px dashed #cbd5e1;
+  background: #f1f5f9;
+  border-radius: 12px;
+  padding: 16px;
+}
 @keyframes sm-bar-in { 0% { transform: translateY(12px); } 65% { transform: translateY(-3px); } 100% { transform: none; } }
 
 @keyframes sm-fade { from { opacity: 0; } to { opacity: 1; } }

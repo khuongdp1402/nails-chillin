@@ -1,5 +1,6 @@
 import type { Booking } from '../types';
 import { checkBookingConflict } from './scheduler';
+import { getStoredServices } from '../data/services';
 
 const STORAGE_KEY = 'aura_nail_bookings_v2';
 const BROADCAST_CHANNEL_NAME = 'aura_nail_sync_channel';
@@ -74,7 +75,10 @@ export function attemptCreateBooking(
     bookingInput.date,
     bookingInput.startTime,
     bookingInput.endTime,
-    currentBookings
+    currentBookings,
+    undefined,
+    bookingInput.serviceIds,
+    getStoredServices()
   );
 
   // 3. Nếu bị trùng -> Chặn và báo lỗi theo đúng yêu cầu

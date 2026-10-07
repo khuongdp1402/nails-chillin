@@ -3,13 +3,11 @@ import React from 'react';
 import { MapPin, Phone, Clock, Sparkles, MessageCircle } from 'lucide-react';
 import { SITE, zaloLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
-import { WaveDivider } from './WaveDivider';
 
 export const Footer: React.FC = () => {
   const ref = useReveal<HTMLDivElement>();
   return (
     <footer className="hx-footer">
-      <WaveDivider variant={1} flip color="var(--bg-main)" className="hx-footer-wave" />
       <div className="container hx-container hx-footer-top">
         <p className="hx-quote">Good nails, Good mood, Good day! ♡</p>
       </div>

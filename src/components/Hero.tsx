@@ -9,7 +9,6 @@ import { useMode } from '../context/ModeContext';
 import type { ServiceMode } from '../context/ModeContext';
 import { SITE, zaloLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
-import { WaveDivider } from './WaveDivider';
 import { Squiggle } from './Squiggle';
 
 interface HeroProps {
@@ -341,7 +340,6 @@ export const Hero: React.FC<HeroProps> = ({
         </div>
       </div>
 
-      <WaveDivider variant={1} color="var(--bg-main)" className="hx-hero-wave" />
     </section>
   );
 };

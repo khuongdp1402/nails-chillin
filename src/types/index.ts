@@ -12,6 +12,17 @@ export interface Service {
   popular?: boolean;
   showOnLanding?: boolean; // undefined = true
   capacity?: number; // khách làm cùng lúc, mặc định 1
+  capacityOverrides?: CapacityOverride[]; // cấu hình theo ngày/thứ
+}
+
+export interface CapacityOverride {
+  id: string;
+  type: 'date' | 'dateRange' | 'weekday';
+  startDate?: string; // for dateRange
+  endDate?: string;   // for dateRange
+  date?: string;      // for single date
+  weekdays?: number[]; // for weekday (0=Sun, 1=Mon, ..., 6=Sat)
+  capacity: number;
 }
 
 export interface LookbookItem {

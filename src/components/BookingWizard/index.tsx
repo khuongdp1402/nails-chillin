@@ -194,7 +194,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
 
   const availableSlots = useMemo(() => {
-    const base = generateAvailableSlots(date, totalDurationMinutes, allBookings);
+    const base = generateAvailableSlots(date, totalDurationMinutes, allBookings, activeIds, services);
     if (date !== todayIso) return base;
     return base.map((s) => {
       const start = timeToMinutes(s.timeStr);
@@ -202,7 +202,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
       if (start < nowMinutes + LEAD_MINUTES) return { ...s, isAvailable: false, conflictReason: LEAD_REASON };
       return s;
     });
-  }, [date, todayIso, nowMinutes, totalDurationMinutes, allBookings]);
+  }, [date, todayIso, nowMinutes, totalDurationMinutes, allBookings, activeIds, services]);
 
   // Hôm nay không còn giờ nào có thể nhận (đã qua, sát giờ hoặc vượt giờ đóng cửa)
   const closedToday =
@@ -461,7 +461,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                 <span className="bk-bar-line">
                   <b>{activeIds.length}</b> dịch vụ
                 </span>
-                <span className="price bk-bar-price">{totalPrice.toLocaleString('vi-VN')}đ</span>
               </div>
               <div className="bk-bar-btns">
                 <button type="button" className="btn btn-primary" onClick={handleProceedToStep2}>
@@ -629,7 +628,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
                   )}
                 </span>
                 <span className="bk-bar-line">
-                  {activeIds.length} dịch vụ · <span className="price bk-bar-price">{totalPrice.toLocaleString('vi-VN')}đ</span>
+                  {activeIds.length} dịch vụ
                 </span>
               </div>
               <div className="bk-bar-btns">
@@ -691,10 +690,6 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
               <div className="bk-row">
                 <span>Dịch vụ</span>
                 <span>{getServiceNames(lastCreatedBooking.serviceIds, services)}</span>
-              </div>
-              <div className="bk-row">
-                <span>Tạm tính</span>
-                <span className="price">{lastCreatedBooking.totalPrice.toLocaleString('vi-VN')}đ</span>
               </div>
             </div>
 

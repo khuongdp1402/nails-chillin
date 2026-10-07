@@ -53,19 +53,41 @@ export function isOverlapping(
 }
 
 /**
+ * Lấy capacity (số lượng tối đa cho phép) của dịch vụ vào ngày chỉ định
+ */
+export function getServiceCapacityOnDate(service: Service, dateIso: string): number {
+  let capacity = service.capacity || 1;
+  if (service.capacityOverrides && service.capacityOverrides.length > 0) {
+    const targetDate = new Date(dateIso);
+    const dayOfWeek = targetDate.getDay();
+    
+    const dateOverride = service.capacityOverrides.find(o => o.type === 'date' && o.date === dateIso);
+    if (dateOverride) return dateOverride.capacity;
+    
+    const rangeOverride = service.capacityOverrides.find(o => o.type === 'dateRange' && o.startDate && o.endDate && dateIso >= o.startDate && dateIso <= o.endDate);
+    if (rangeOverride) return rangeOverride.capacity;
+    
+    const weekdayOverride = service.capacityOverrides.find(o => o.type === 'weekday' && o.weekdays && o.weekdays.includes(dayOfWeek));
+    if (weekdayOverride) return weekdayOverride.capacity;
+  }
+  return capacity;
+}
+
+/**
  * Sinh danh sách các khung giờ trong ngày và kiểm tra tính khả dụng
- * dựa trên tổng thời lượng khách đã chọn.
+ * dựa trên tổng thời lượng khách đã chọn, có tính toán sức chứa.
  */
 export function generateAvailableSlots(
   date: string,
   totalDurationMinutes: number,
-  allBookings: Booking[]
+  allBookings: Booking[],
+  selectedServiceIds: string[] = [],
+  servicesList: Service[] = []
 ): TimeSlot[] {
   const openMinutes = timeToMinutes(SALON_HOURS.openTime);
   const closeMinutes = timeToMinutes(SALON_HOURS.closeTime);
   const step = SALON_HOURS.slotStepMinutes;
 
-  // Lọc các lịch đang hoạt động (không tính lịch đã hủy) trong ngày được chọn
   const activeBookingsOnDate = allBookings.filter(
     (b) => b.date === date && b.status !== 'cancelled'
   );
@@ -79,7 +101,6 @@ export function generateAvailableSlots(
     const timeStr = minutesToTime(slotStart);
     const endTimeStr = minutesToTime(slotEnd);
 
-    // Điều kiện 1: Kết thúc không được vượt quá giờ đóng cửa
     if (slotEnd > closeMinutes) {
       slots.push({
         timeStr,
@@ -90,42 +111,63 @@ export function generateAvailableSlots(
       continue;
     }
 
-    // Điều kiện 2: Khoảng [slotStart, slotEnd) không được giao với bất kỳ lịch đã đặt nào
-    const conflictingBooking = activeBookingsOnDate.find((b) => {
-      const bStart = timeToMinutes(b.startTime);
-      const bEnd = timeToMinutes(b.endTime);
-      return isOverlapping(slotStart, slotEnd, bStart, bEnd);
-    });
+    let hasConflict = false;
+    let conflictReason = '';
 
-    if (conflictingBooking) {
-      slots.push({
-        timeStr,
-        endTimeStr,
-        isAvailable: false,
-        conflictReason: `Trùng với lịch hẹn (${conflictingBooking.startTime} – ${conflictingBooking.endTime})`,
-        conflictingBooking,
-      });
+    if (selectedServiceIds.length > 0 && servicesList.length > 0) {
+      for (const sId of selectedServiceIds) {
+        const service = servicesList.find(s => s.id === sId);
+        if (!service) continue;
+
+        const capacityLimit = getServiceCapacityOnDate(service, date);
+        
+        const overlappingCount = activeBookingsOnDate.filter(b => {
+          const bStart = timeToMinutes(b.startTime);
+          const bEnd = timeToMinutes(b.endTime);
+          return isOverlapping(slotStart, slotEnd, bStart, bEnd) && b.serviceIds?.includes(sId);
+        }).length;
+
+        if (overlappingCount >= capacityLimit) {
+          hasConflict = true;
+          conflictReason = `Dịch vụ "${service.name}" đã hết chỗ lúc ${timeStr}`;
+          break;
+        }
+      }
     } else {
-      slots.push({
-        timeStr,
-        endTimeStr,
-        isAvailable: true,
+      // Fallback
+      const conflictingBooking = activeBookingsOnDate.find((b) => {
+        const bStart = timeToMinutes(b.startTime);
+        const bEnd = timeToMinutes(b.endTime);
+        return isOverlapping(slotStart, slotEnd, bStart, bEnd);
       });
+      if (conflictingBooking) {
+        hasConflict = true;
+        conflictReason = `Trùng với lịch hẹn (${conflictingBooking.startTime} – ${conflictingBooking.endTime})`;
+      }
     }
+
+    slots.push({
+      timeStr,
+      endTimeStr,
+      isAvailable: !hasConflict,
+      conflictReason: hasConflict ? conflictReason : undefined,
+    });
   }
 
   return slots;
 }
 
 /**
- * Kiểm tra xem một lịch đặt cụ thể có bị xung đột với các lịch hiện có hay không
+ * Kiểm tra xem một lịch đặt cụ thể có bị xung đột với các lịch hiện có hay không (có tính sức chứa)
  */
 export function checkBookingConflict(
   date: string,
   startTime: string,
   endTime: string,
   allBookings: Booking[],
-  excludeBookingId?: string
+  excludeBookingId?: string,
+  serviceIds: string[] = [],
+  servicesList: Service[] = []
 ): { hasConflict: boolean; conflictingBooking?: Booking; reason?: string } {
   const reqStart = timeToMinutes(startTime);
   const reqEnd = timeToMinutes(endTime);
@@ -142,18 +184,41 @@ export function checkBookingConflict(
     (b) => b.date === date && b.status !== 'cancelled' && b.id !== excludeBookingId
   );
 
-  const conflict = activeBookings.find((b) => {
-    const bStart = timeToMinutes(b.startTime);
-    const bEnd = timeToMinutes(b.endTime);
-    return isOverlapping(reqStart, reqEnd, bStart, bEnd);
-  });
+  if (serviceIds.length > 0 && servicesList.length > 0) {
+    for (const sId of serviceIds) {
+      const service = servicesList.find(s => s.id === sId);
+      if (!service) continue;
 
-  if (conflict) {
-    return {
-      hasConflict: true,
-      conflictingBooking: conflict,
-      reason: `Đã có khách (${conflict.customerName}) đặt từ ${conflict.startTime} đến ${conflict.endTime}`,
-    };
+      const capacityLimit = getServiceCapacityOnDate(service, date);
+      
+      const overlappingBookings = activeBookings.filter(b => {
+        const bStart = timeToMinutes(b.startTime);
+        const bEnd = timeToMinutes(b.endTime);
+        return isOverlapping(reqStart, reqEnd, bStart, bEnd) && b.serviceIds?.includes(sId);
+      });
+
+      if (overlappingBookings.length >= capacityLimit) {
+        return {
+          hasConflict: true,
+          reason: `Dịch vụ "${service.name}" đã hết chỗ lúc ${startTime}`,
+        };
+      }
+    }
+  } else {
+    // Fallback
+    const conflict = activeBookings.find((b) => {
+      const bStart = timeToMinutes(b.startTime);
+      const bEnd = timeToMinutes(b.endTime);
+      return isOverlapping(reqStart, reqEnd, bStart, bEnd);
+    });
+
+    if (conflict) {
+      return {
+        hasConflict: true,
+        conflictingBooking: conflict,
+        reason: `Đã có khách (${conflict.customerName}) đặt từ ${conflict.startTime} đến ${conflict.endTime}`,
+      };
+    }
   }
 
   return { hasConflict: false };

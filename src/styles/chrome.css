@@ -1,13 +1,13 @@
 /* Chrome: header, mode picker, zalo fab (prefix ch-) */
 
 .site-header.ch-header {
-  background: rgba(255, 255, 255, 0.65);
+  background: rgba(255, 255, 255, 0.25);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   padding: 10px 0;
-  border-bottom: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.45);
   border-radius: 0 0 28px 28px;
-  box-shadow: 0 10px 30px -10px rgba(100, 116, 139, 0.15), 0 0 20px rgba(255, 255, 255, 0.8);
+  box-shadow: 0 10px 30px -10px rgba(100, 116, 139, 0.15), 0 0 20px rgba(255, 255, 255, 0.5);
 }
 .ch-header .header-inner {
   gap: 10px;
@@ -77,8 +77,8 @@
 .site-header.ch-header.is-compact {
   padding: 6px 0;
   border-radius: 0 0 20px 20px;
-  background: rgba(255, 255, 255, 0.96);
-  box-shadow: 0 8px 24px -10px rgba(100, 116, 139, 0.25), 0 0 15px rgba(255, 255, 255, 0.9);
+  background: rgba(255, 255, 255, 0.45);
+  box-shadow: 0 8px 24px -10px rgba(100, 116, 139, 0.25), 0 0 15px rgba(255, 255, 255, 0.6);
 }
 .ch-header.is-compact .brand-icon { width: 32px; height: 32px; }
 .ch-header.is-compact .brand-name { font-size: 1.25rem; }
@@ -168,8 +168,8 @@
   min-height: 44px;
   padding: 26px 20px;
   border-radius: var(--radius-card);
-  border: 1.5px solid var(--border-subtle);
-  background: rgba(255, 255, 255, 0.86);
+  border: 1.5px solid rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.2);
   color: var(--text-main);
   font-family: var(--font-body);
   cursor: pointer;

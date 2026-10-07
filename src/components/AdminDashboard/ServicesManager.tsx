@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { ImageOff, Minus, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react';
-import type { Service, ServiceCategory } from '../../types';
+import type { CapacityOverride, Service, ServiceCategory } from '../../types';
 import { getStoredServices, saveStoredServices } from '../../data/services';
 import { SERVICE_BADGES } from '../../data/badges';
 import { formatDuration } from '../../utils/scheduler';
@@ -9,6 +9,7 @@ import { PriceInput } from '../ui/PriceInput';
 import { Select } from '../ui/Select';
 import { Toggle } from '../ui/Toggle';
 import { ImageUpload } from '../ui/ImageUpload';
+import { CapacityOverridesEditor } from './CapacityOverridesEditor';
 import '../../styles/services-manager.css';
 
 export interface ServicesManagerProps {
@@ -37,6 +38,7 @@ interface Draft {
   durationMinutes: number;
   price: number;
   capacity: number;
+  capacityOverrides: CapacityOverride[];
   description: string;
   badge: string;
   imageUrl: string;
@@ -49,6 +51,7 @@ function toDraft(s?: Service): Draft {
     durationMinutes: s?.durationMinutes ?? 60,
     price: s?.price ?? 0,
     capacity: s?.capacity ?? 1,
+    capacityOverrides: s?.capacityOverrides ?? [],
     description: (s?.description ?? '').slice(0, DESC_MAX),
     badge: s?.badge && SERVICE_BADGES.includes(s.badge) ? s.badge : NO_BADGE,
     imageUrl: s?.imageUrl ?? '',
@@ -130,9 +133,12 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
   const catLabel = category === 'nail' ? 'Nail' : 'Gội đầu';
 
   return (
-    <div className={`sm-overlay${closing ? ' is-closing' : ''}`} onMouseDown={(e) => e.target === e.currentTarget && requestClose()}>
+    <div
+      className={`sm-overlay bg-black/60 backdrop-blur-md${closing ? ' is-closing' : ''}`}
+      onMouseDown={(e) => e.target === e.currentTarget && requestClose()}
+    >
       <div
-        className="sm-drawer"
+        className="sm-drawer bg-slate-50 border border-slate-200 rounded-2xl shadow-2xl"
         role="dialog"
         aria-modal="true"
         aria-labelledby="sm-drawer-title"
@@ -141,20 +147,20 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
         <header className="sm-drawer-head">
           <div>
             <span className="sm-drawer-tag">{catLabel}</span>
-            <h3 id="sm-drawer-title">{editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
+            <h3 id="sm-drawer-title" className="text-slate-900 font-bold">{editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ mới'}</h3>
           </div>
           <button type="button" className="sm-icon-btn" onClick={requestClose} aria-label="Đóng">
             <X size={18} aria-hidden="true" />
           </button>
         </header>
 
-        <form className="sm-form" onSubmit={submit} noValidate>
+        <form className="sm-form bg-slate-50" onSubmit={submit} noValidate>
           <div className="sm-field">
-            <label htmlFor="sm-name">Tên dịch vụ</label>
+            <label htmlFor="sm-name" className="text-slate-700 font-medium text-sm">Tên dịch vụ</label>
             <input
               id="sm-name"
               ref={nameRef}
-              className={`ui-input${errors.name ? ' is-invalid' : ''}`}
+              className={`ui-input bg-white text-gray-900 border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500${errors.name ? ' is-invalid' : ''}`}
               value={draft.name}
               maxLength={80}
               placeholder="Ví dụ: Sơn gel thạch Hàn Quốc"
@@ -169,7 +175,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
           <div className="sm-row">
             <div className="sm-field">
-              <label htmlFor="sm-duration">Thời gian làm</label>
+              <label htmlFor="sm-duration" className="text-slate-700 font-medium text-sm">Thời gian làm</label>
               <Select
                 id="sm-duration"
                 value={String(draft.durationMinutes)}
@@ -178,7 +184,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
               />
             </div>
             <div className="sm-field">
-              <label htmlFor="sm-price">Giá</label>
+              <label htmlFor="sm-price" className="text-slate-700 font-medium text-sm">Giá</label>
               <PriceInput
                 id="sm-price"
                 value={draft.price}
@@ -195,7 +201,7 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
 
           <div className="sm-row">
             <div className="sm-field">
-              <span className="sm-label" id="sm-cap-label">Số khách làm cùng lúc</span>
+              <span className="sm-label text-slate-700 font-medium text-sm" id="sm-cap-label">Số khách làm cùng lúc</span>
               <div className="sm-stepper" role="group" aria-labelledby="sm-cap-label">
                 <button
                   type="button"
@@ -218,9 +224,14 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
                 </button>
               </div>
               <p className="sm-hint">Sẽ áp dụng khi tiệm có thêm thợ.</p>
+              
+              <CapacityOverridesEditor 
+                overrides={draft.capacityOverrides} 
+                onChange={v => set('capacityOverrides', v)} 
+              />
             </div>
             <div className="sm-field">
-              <label htmlFor="sm-badge">Nhãn nổi bật</label>
+              <label htmlFor="sm-badge" className="text-slate-700 font-medium text-sm">Nhãn nổi bật</label>
               <Select
                 id="sm-badge"
                 value={draft.badge}
@@ -231,10 +242,10 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
           </div>
 
           <div className="sm-field">
-            <label htmlFor="sm-desc">Mô tả ngắn</label>
+            <label htmlFor="sm-desc" className="text-slate-700 font-medium text-sm">Mô tả ngắn</label>
             <textarea
               id="sm-desc"
-              className="ui-input sm-textarea"
+              className="ui-input sm-textarea bg-white text-gray-900 border border-slate-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               rows={3}
               maxLength={DESC_MAX}
               value={draft.description}
@@ -245,8 +256,10 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
           </div>
 
           <div className="sm-field">
-            <span className="sm-label">Ảnh dịch vụ</span>
-            <ImageUpload value={draft.imageUrl} onChange={(v) => set('imageUrl', v)} />
+            <span className="sm-label text-slate-700 font-medium text-sm">Ảnh dịch vụ</span>
+            <div className="sm-image-box border-2 border-dashed border-slate-300 bg-slate-100 rounded-xl p-4">
+              <ImageUpload value={draft.imageUrl} onChange={(v) => set('imageUrl', v)} />
+            </div>
           </div>
 
           <div className="sm-field sm-toggle-field">
@@ -260,13 +273,13 @@ function ServiceDrawer({ editing, category, onClose, onSubmit }: DrawerProps) {
           {saveError && <p className="sm-error sm-save-error" role="alert">{saveError}</p>}
 
           <footer className={`sm-bar${dirty ? ' is-ready' : ''}`}>
-            <div className="sm-bar-inner">
-              <span className="sm-bar-note" aria-live="polite">
+            <div className="sm-bar-inner bg-white">
+              <span className="sm-bar-note text-slate-700" aria-live="polite">
                 {dirty ? 'Bạn có thay đổi chưa lưu' : 'Chưa có thay đổi'}
               </span>
               <div className="sm-bar-btns">
-                <button type="button" className="btn btn-secondary" onClick={requestClose}>Hủy</button>
-                <button type="submit" className="btn btn-primary">
+                <button type="button" className="sm-btn-cancel bg-white text-slate-700 border border-slate-300 hover:bg-slate-50 font-bold rounded-full px-6 py-3 min-h-[44px]" onClick={requestClose}>Hủy</button>
+                <button type="submit" className="sm-btn-save bg-slate-900 text-white font-bold rounded-full px-6 py-3 min-h-[44px] hover:bg-slate-800 shadow-2xl">
                   {editing ? 'Lưu thay đổi' : 'Thêm dịch vụ'}
                 </button>
               </div>
@@ -326,6 +339,7 @@ export function ServicesManager({ services, onServicesChanged }: ServicesManager
       popular: editing?.popular,
       showOnLanding: draft.showOnLanding,
       capacity: draft.capacity,
+      capacityOverrides: draft.capacityOverrides,
     };
     const next = editing ? services.map((s) => (s.id === editing.id ? base : s)) : [...services, base];
     if (!persist(next)) return SAVE_FAIL_MSG;

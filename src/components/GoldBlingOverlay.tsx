@@ -1,13 +1,12 @@
 import React, { useEffect, useRef } from 'react';
 
 /**
- * Interface representing a delicate silver needle cross (+) glint anchored to an image
+ * Interface representing a delicate silver needle cross (+) glint
  */
-interface ImageCrossBling {
+interface CrossBling {
   id: number;
-  element: HTMLImageElement;
-  relX: number; // 0.12 to 0.88 (relative coordinate inside the image)
-  relY: number; // 0.12 to 0.88
+  x: number; // Viewport X
+  y: number; // Viewport Y
   size: number; // Arm half-length in pixels
   rotation: number; // Subtle tilt angle
   age: number; // in milliseconds
@@ -50,75 +49,27 @@ export const GoldBlingOverlay: React.FC = () => {
     window.addEventListener('resize', resize, { passive: true });
 
     // Active cross blings pool
-    const sparkles: ImageCrossBling[] = [];
+    const sparkles: CrossBling[] = [];
 
-    // Check if an image is currently visible in viewport
-    const isImageVisible = (img: HTMLImageElement): boolean => {
-      if (!img.isConnected) return false;
-      const rect = img.getBoundingClientRect();
-      if (rect.width < 35 || rect.height < 35) return false;
-      if (
-        rect.bottom <= 0 ||
-        rect.top >= window.innerHeight ||
-        rect.right <= 0 ||
-        rect.left >= window.innerWidth
-      ) {
-        return false;
-      }
+    // Helper to spawn a new cross bling
+    const createBling = (customX?: number, customY?: number): CrossBling => {
+      // Sparkle size: 3.5px to 7px arm half-length
+      const size = 3.5 + Math.random() * 3.5;
+      const lifespan = 1500 + Math.random() * 1500; // 1.5s - 3.0s
 
-      // Check if carousel item is hidden or invisible
-      const carItem = img.closest('.hx-car-item');
-      if (
-        carItem &&
-        (carItem.classList.contains('hx-pos-hidden') ||
-          carItem.classList.contains('hx-pos-far-left') ||
-          carItem.classList.contains('hx-pos-far-right'))
-      ) {
-        return false;
-      }
-
-      const style = window.getComputedStyle(img);
-      if (style.display === 'none' || style.visibility === 'hidden' || style.opacity === '0') {
-        return false;
-      }
-
-      return true;
-    };
-
-    // Get all valid visible images across the site
-    const getVisibleImages = (): HTMLImageElement[] => {
-      const allImgs = Array.from(document.querySelectorAll<HTMLImageElement>('img'));
-      return allImgs.filter(isImageVisible);
-    };
-
-    // Helper to spawn a new cross bling anchored to an image
-    const createBlingForImage = (
-      img: HTMLImageElement,
-      customRelX?: number,
-      customRelY?: number
-    ): ImageCrossBling => {
-      const isHeroCenter = !!img.closest('.hx-pos-center');
-      // Sparkle size: 4px to 8px arm half-length (needle cross total span 8px - 16px)
-      const size = isHeroCenter ? 4.5 + Math.random() * 4 : 3.5 + Math.random() * 3.5;
-      const lifespan = 1200 + Math.random() * 1000; // 1.2s - 2.2s
-
-      const hues: ImageCrossBling['silverHue'][] = ['diamond', 'platinum', 'ice'];
+      const hues: CrossBling['silverHue'][] = ['diamond', 'platinum', 'ice'];
       const silverHue = hues[Math.floor(Math.random() * hues.length)];
 
-      // Sample interior area of image (12% to 88%) so it never spills over rounded corners
-      const relX =
-        customRelX !== undefined ? customRelX : 0.12 + Math.random() * 0.76;
-      const relY =
-        customRelY !== undefined ? customRelY : 0.12 + Math.random() * 0.76;
+      const x = customX !== undefined ? customX : Math.random() * width;
+      const y = customY !== undefined ? customY : Math.random() * height;
 
       // Pure upright cross (+) with very slight natural variation (0 to ±8 degrees)
       const rotation = (Math.random() - 0.5) * 0.14;
 
       return {
         id: ++idCounter,
-        element: img,
-        relX,
-        relY,
+        x,
+        y,
         size,
         rotation,
         age: 0,
@@ -127,64 +78,32 @@ export const GoldBlingOverlay: React.FC = () => {
       };
     };
 
-    // Populate initial sparkles on visible images
-    const seedInitialSparkles = () => {
-      const visible = getVisibleImages();
-      visible.forEach((img) => {
-        const isCenter = !!img.closest('.hx-pos-center');
-        const count = isCenter ? 2 : 1;
-        for (let i = 0; i < count; i++) {
-          const sp = createBlingForImage(img);
-          sp.age = Math.random() * sp.lifespan;
-          sparkles.push(sp);
-        }
-      });
-    };
-    seedInitialSparkles();
+    // Populate initial sparkles
+    for (let i = 0; i < 25; i++) {
+      const sp = createBling();
+      sp.age = Math.random() * sp.lifespan;
+      sparkles.push(sp);
+    }
 
-    // Subtle interactive mouse bling ONLY when hovering over an image
+    // Subtle interactive mouse bling
     let lastMouseSpawn = 0;
     const handleMouseMove = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-      const img =
-        target.tagName === 'IMG'
-          ? (target as HTMLImageElement)
-          : (target.closest('.hx-car-item, .svc-media, .bk-svc-img')?.querySelector('img') as HTMLImageElement | null);
-
-      if (img && isImageVisible(img)) {
-        const now = performance.now();
-        if (now - lastMouseSpawn > 250) {
-          lastMouseSpawn = now;
-          if (Math.random() < 0.5) {
-            const rect = img.getBoundingClientRect();
-            const relX = Math.max(0.1, Math.min(0.9, (e.clientX - rect.left) / rect.width));
-            const relY = Math.max(0.1, Math.min(0.9, (e.clientY - rect.top) / rect.height));
-            sparkles.push(createBlingForImage(img, relX, relY));
-          }
+      const now = performance.now();
+      if (now - lastMouseSpawn > 150) {
+        lastMouseSpawn = now;
+        if (Math.random() < 0.3) {
+          const offsetX = (Math.random() - 0.5) * 40;
+          const offsetY = (Math.random() - 0.5) * 40;
+          sparkles.push(createBling(e.clientX + offsetX, e.clientY + offsetY));
         }
       }
     };
 
     const handleClick = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (!target) return;
-
-      const img =
-        target.tagName === 'IMG'
-          ? (target as HTMLImageElement)
-          : (target.closest('.hx-car-item, .svc-media, .bk-svc-img')?.querySelector('img') as HTMLImageElement | null);
-
-      if (img && isImageVisible(img)) {
-        const rect = img.getBoundingClientRect();
-        for (let i = 0; i < 2; i++) {
-          const offsetX = (Math.random() - 0.5) * 20;
-          const offsetY = (Math.random() - 0.5) * 20;
-          const relX = Math.max(0.1, Math.min(0.9, (e.clientX + offsetX - rect.left) / rect.width));
-          const relY = Math.max(0.1, Math.min(0.9, (e.clientY + offsetY - rect.top) / rect.height));
-          sparkles.push(createBlingForImage(img, relX, relY));
-        }
+      for (let i = 0; i < 3; i++) {
+        const offsetX = (Math.random() - 0.5) * 60;
+        const offsetY = (Math.random() - 0.5) * 60;
+        sparkles.push(createBling(e.clientX + offsetX, e.clientY + offsetY));
       }
     };
 
@@ -237,7 +156,6 @@ export const GoldBlingOverlay: React.FC = () => {
       targetCtx.fill();
     };
 
-    // Periodically sync sparkles count per visible image
     let lastScanTime = 0;
 
     const render = (time: number) => {
@@ -253,7 +171,7 @@ export const GoldBlingOverlay: React.FC = () => {
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, width, height);
 
-      // Light blend mode cho hiệu ứng ánh kim lấp lánh phản quang trên ảnh
+      // Light blend mode cho hiệu ứng ánh kim lấp lánh phản quang
       ctx.globalCompositeOperation = 'lighter';
 
       // 1. Update and draw current sparkles
@@ -261,19 +179,7 @@ export const GoldBlingOverlay: React.FC = () => {
         const s = sparkles[i];
         s.age += delta;
 
-        if (s.age >= s.lifespan || !s.element.isConnected) {
-          sparkles.splice(i, 1);
-          continue;
-        }
-
-        const rect = s.element.getBoundingClientRect();
-        // Check if image is out of screen
-        if (
-          rect.bottom <= 0 ||
-          rect.top >= window.innerHeight ||
-          rect.right <= 0 ||
-          rect.left >= window.innerWidth
-        ) {
+        if (s.age >= s.lifespan) {
           sparkles.splice(i, 1);
           continue;
         }
@@ -301,12 +207,8 @@ export const GoldBlingOverlay: React.FC = () => {
         const currentArm = s.size * Math.max(0, scale);
         if (currentArm <= 0.2 || alpha <= 0.01) continue;
 
-        // Coordinates anchored directly to the image element
-        const screenX = rect.left + s.relX * rect.width;
-        const screenY = rect.top + s.relY * rect.height;
-
         ctx.save();
-        ctx.translate(screenX, screenY);
+        ctx.translate(s.x, s.y);
         ctx.rotate(s.rotation);
 
         // Màu bạc ánh kim kim cương (Silver Diamond Bling)
@@ -335,26 +237,16 @@ export const GoldBlingOverlay: React.FC = () => {
         ctx.restore();
       }
 
-      // 2. Replenish sparkles on visible images smoothly
+      // 2. Replenish sparkles across the screen
       if (time - lastScanTime > 300) {
         lastScanTime = time;
-        const visibleImages = getVisibleImages();
-
-        // Calculate how many sparkles each visible image has
-        const countMap = new Map<HTMLImageElement, number>();
-        for (const s of sparkles) {
-          countMap.set(s.element, (countMap.get(s.element) || 0) + 1);
-        }
-
-        for (const img of visibleImages) {
-          const isCenter = !!img.closest('.hx-pos-center');
-          const isLarge = img.getBoundingClientRect().width > 180;
-          // Target 2-3 sparkles on Hero center slide, 1-2 on regular cards
-          const targetForImg = isCenter ? 3 : isLarge ? 2 : 1;
-          const currentCount = countMap.get(img) || 0;
-
-          if (currentCount < targetForImg && Math.random() < 0.6) {
-            sparkles.push(createBlingForImage(img));
+        const targetCount = Math.floor((width * height) / 30000); 
+        const maxSparkles = Math.min(targetCount, 60);
+        
+        if (sparkles.length < maxSparkles && Math.random() < 0.8) {
+          sparkles.push(createBling());
+          if (Math.random() < 0.5) {
+            sparkles.push(createBling());
           }
         }
       }

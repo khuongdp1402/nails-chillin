@@ -5,48 +5,48 @@
    ========================================================================== */
 
 :root {
-  /* Canvas & Surfaces — Luminous Cool Slate Blue-Gray (Xám Xanh) & Crisp Pearl */
-  --bg-main: #edf2f7;
-  --bg-card: rgba(255, 255, 255, 0.94);
-  --bg-surface: #e2e8f0;
-  --bg-card-hover: #ffffff;
+  /* Canvas & Surfaces — Warm Beige/Taupe Silk & Glass */
+  --bg-main: #bca795; /* Base taupe fallback */
+  --bg-card: rgba(255, 255, 255, 0.2);
+  --bg-surface: rgba(255, 255, 255, 0.4);
+  --bg-card-hover: rgba(255, 255, 255, 0.3);
 
-  /* Metallic Silver & Platinum Accents */
+  /* Champagne & Pearl Accents */
   --silver-bright: #ffffff;
-  --silver-sparkle: #f8fafc;
-  --silver-light: #edf2f7;
-  --silver-metal: #cbd5e1;
-  --silver-chrome: #94a3b8;
-  --silver-deep: #475569;
-  --silver-dark: #1e293b;
+  --silver-sparkle: #fdfbf7;
+  --silver-light: #f5f0eb;
+  --silver-metal: #d1c4b9;
+  --silver-chrome: #a39185;
+  --silver-deep: #7a6a5f;
+  --silver-dark: #5a4a40;
 
-  /* Cool Slate Blue-Gray (Xám Xanh) Accents */
-  --slate-blue-primary: #334e68;
-  --slate-blue-dark: #1e293b;
-  --slate-blue-light: #486581;
-  --slate-blue-ice: #627d98;
-  --slate-blue-glow: rgba(51, 78, 104, 0.12);
+  /* Accent Colors (repurposed from Slate/Blue to Taupe/Beige) */
+  --slate-blue-primary: #8a7a6c;
+  --slate-blue-dark: #5a4a40;
+  --slate-blue-light: #bca795;
+  --slate-blue-ice: #dfd4ca;
+  --slate-blue-glow: rgba(188, 167, 149, 0.25);
 
   /* Silver & Slate Borders & Diamond Glow */
-  --silver-border-thin: rgba(148, 163, 184, 0.45);
-  --silver-border-bright: rgba(100, 116, 139, 0.7);
-  --silver-diamond-glow: 0 0 14px rgba(255, 255, 255, 1), 0 0 8px rgba(148, 163, 184, 0.45);
+  --silver-border-thin: rgba(255, 255, 255, 0.4);
+  --silver-border-bright: rgba(255, 255, 255, 0.6);
+  --silver-diamond-glow: 0 0 14px rgba(255, 255, 255, 0.8), 0 0 8px rgba(255, 255, 255, 0.4);
 
-  /* Legacy aliases mapped to elegant silver & slate blue-gray */
-  --gold-champagne: #cbd5e1;
-  --gold-accent: #486581;
-  --gold-bronze: #334e68;
-  --gold-sparkle: #e2e8f0;
+  /* Legacy aliases mapped to elegant champagne & beige */
+  --gold-champagne: #d1c4b9;
+  --gold-accent: #bca795;
+  --gold-bronze: #8a7a6c;
+  --gold-sparkle: #f5f0eb;
   --gold-border-thin: var(--silver-border-thin);
   --gold-border-bright: var(--silver-border-bright);
   --gold-diamond-glow: var(--silver-diamond-glow);
 
-  --accent-rose: #475569;
-  --accent-rose-dark: #1e293b;
-  --accent-silver: #cbd5e1;
-  --accent-silver-dark: #1e293b;
-  --accent-red: #e11d48;
-  --accent-red-bg: rgba(225, 29, 72, 0.08);
+  --accent-rose: #a39185;
+  --accent-rose-dark: #5a4a40;
+  --accent-silver: #d1c4b9;
+  --accent-silver-dark: #5a4a40;
+  --accent-red: #d97777;
+  --accent-red-bg: rgba(217, 119, 119, 0.15);
 
   --accent-gold: var(--slate-blue-light);
   --accent-gold-dark: var(--slate-blue-dark);
@@ -54,16 +54,16 @@
   --text-gold: var(--slate-blue-primary);
   --radius-full: var(--radius-pill);
 
-  /* Typography — Refined Slate Charcoal */
-  --text-main: #0f172a;
-  --text-muted: #475569;
-  --text-dim: #64748b;
-  --text-on-accent: #1e293b;
-  --price-color: #0f172a;
+  /* Typography — Elegant Cream/White & Dark Taupe */
+  --text-main: #ffffff; /* White text for glass cards */
+  --text-muted: rgba(255, 255, 255, 0.8);
+  --text-dim: rgba(255, 255, 255, 0.6);
+  --text-on-accent: #ffffff;
+  --price-color: #ffffff;
 
-  /* Borders — Fine Shimmering Silver & Crisp White */
-  --border-subtle: rgba(148, 163, 184, 0.35);
-  --border-strong: rgba(100, 116, 139, 0.55);
+  /* Borders — Fine Shimmering Pearl & Crisp White */
+  --border-subtle: rgba(255, 255, 255, 0.3);
+  --border-strong: rgba(255, 255, 255, 0.5);
   --border-silver: #ffffff;
 
   /* Gradients — Cool Slate Blue-Gray & Silver Chrome */
@@ -100,22 +100,22 @@
 
   --gradient-hero: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.45) 0%,
-    rgba(241, 245, 249, 0.25) 45%,
-    rgba(226, 232, 240, 0.4) 100%
+    rgba(255, 255, 255, 0.15) 0%,
+    rgba(241, 245, 249, 0.05) 45%,
+    rgba(226, 232, 240, 0.1) 100%
   );
 
   --gradient-hero-mobile: linear-gradient(
     180deg,
-    rgba(255, 255, 255, 0.5) 0%,
-    rgba(241, 245, 249, 0.3) 50%,
-    rgba(226, 232, 240, 0.5) 100%
+    rgba(255, 255, 255, 0.2) 0%,
+    rgba(241, 245, 249, 0.1) 50%,
+    rgba(226, 232, 240, 0.15) 100%
   );
 
   --gradient-footer: linear-gradient(
     180deg,
-    rgba(241, 245, 249, 0.45) 0%,
-    rgba(226, 232, 240, 0.65) 100%
+    rgba(241, 245, 249, 0.15) 0%,
+    rgba(226, 232, 240, 0.25) 100%
   );
 
   --gradient-ombre: var(--gradient-silver-bling);
@@ -162,26 +162,10 @@ html {
 
 body {
   font-family: var(--font-body);
-  background-color: #dbe4ee;
-  background-image:
-    /* Luminous frosted silver mist overlay for high contrast and legibility */
-    linear-gradient(
-      180deg,
-      rgba(241, 245, 249, 0.78) 0%,
-      rgba(235, 241, 248, 0.70) 35%,
-      rgba(226, 232, 240, 0.72) 70%,
-      rgba(215, 226, 238, 0.80) 100%
-    ),
-    radial-gradient(
-      ellipse at 50% 12%,
-      rgba(255, 255, 255, 0.65) 0%,
-      rgba(219, 234, 254, 0.25) 50%,
-      transparent 80%
-    ),
-    /* Exact sparkling silver glitter texture matching user's photo */
-    url('/silver-glitter-hd.webp');
-  background-size: cover, cover, cover;
-  background-position: center top;
+  background-color: var(--bg-main);
+  background-image: url('/silk-bg.jpg');
+  background-size: cover;
+  background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
   color: var(--text-main);
@@ -202,21 +186,18 @@ h4 {
 
 .script-text {
   font-family: var(--font-script);
-  font-weight: 700;
-  color: var(--slate-blue-primary);
-  text-shadow: 0 0 14px rgba(255, 255, 255, 1), 0 0 20px rgba(100, 116, 139, 0.2);
+  font-weight: 500;
+  color: #ffffff;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.15);
 }
 
 .gold-gradient-text,
 .emerald-gradient-text,
 .silver-bling-text {
-  background: linear-gradient(135deg, #0f172a 0%, #334e68 40%, #1e293b 70%, #486581 100%);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #ffffff;
   display: inline-block;
-  font-weight: 800;
-  filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.95));
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 p {
