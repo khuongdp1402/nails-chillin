@@ -456,7 +456,8 @@
 .bk-row:nth-child(odd) { background: #FFFFFF; }
 .bk-row span:first-child { color: var(--text-muted); flex-shrink: 0; }
 .bk-row span:last-child { font-weight: 600; text-align: right; color: var(--text-main); min-width: 0; overflow-wrap: anywhere; }
-.bk-zalo {
+.bk-zalo,
+.bk-instagram {
   background: var(--primary-terracotta);
   color: #FFFFFF;
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -465,7 +466,8 @@
   box-shadow: 0 4px 14px rgba(116, 59, 37, 0.25);
   transition: all var(--dur) var(--ease-lux);
 }
-.bk-zalo:hover {
+.bk-zalo:hover,
+.bk-instagram:hover {
   background: var(--primary-terracotta-dark);
   color: #FFFFFF;
   box-shadow: 0 8px 20px rgba(116, 59, 37, 0.35);

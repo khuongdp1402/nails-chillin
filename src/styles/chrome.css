@@ -248,8 +248,9 @@
 @keyframes ch-fade-out { to { opacity: 0; transform: scale(1.02); } }
 @keyframes ch-rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
 
-/* ---------- Zalo FAB ---------- */
-.ch-zalo {
+/* ---------- Contact FAB (Instagram / Zalo) ---------- */
+.ch-zalo,
+.ch-instagram {
   position: fixed;
   right: 18px;
   bottom: calc(18px + env(safe-area-inset-bottom));
@@ -275,11 +276,14 @@
   transition: transform var(--dur-fast) var(--ease-lux), box-shadow var(--dur-fast) var(--ease-lux);
 }
 .ch-zalo:hover .ch-zalo-btn,
-.ch-zalo:focus-visible .ch-zalo-btn {
+.ch-zalo:focus-visible .ch-zalo-btn,
+.ch-instagram:hover .ch-zalo-btn,
+.ch-instagram:focus-visible .ch-zalo-btn {
   transform: translateY(-3px) scale(1.05);
   box-shadow: 0 10px 28px rgba(116, 59, 37, 0.4);
 }
-.ch-zalo:focus-visible { outline: none; }
+.ch-zalo:focus-visible,
+.ch-instagram:focus-visible { outline: none; }
 .ch-zalo-tip {
   position: absolute;
   right: calc(100% + 10px);
@@ -299,14 +303,17 @@
   transition: opacity var(--dur-fast) var(--ease-lux), transform var(--dur-fast) var(--ease-lux);
 }
 .ch-zalo:hover .ch-zalo-tip,
-.ch-zalo:focus-visible .ch-zalo-tip { opacity: 1; transform: translate(0, -50%); }
+.ch-zalo:focus-visible .ch-zalo-tip,
+.ch-instagram:hover .ch-zalo-tip,
+.ch-instagram:focus-visible .ch-zalo-tip { opacity: 1; transform: translate(0, -50%); }
 @keyframes ch-pulse {
   0% { box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 0 0 0 rgba(255, 255, 255, 0.9); }
   70%, 100% { box-shadow: 0 0 25px rgba(255, 255, 255, 1), 0 0 0 18px rgba(255, 255, 255, 0); }
 }
 
 @media (max-width: 560px) {
-  .ch-zalo {
+  .ch-zalo,
+  .ch-instagram {
     right: 12px;
     bottom: calc(12px + env(safe-area-inset-bottom));
   }

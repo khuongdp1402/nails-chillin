@@ -207,12 +207,14 @@
   flex-shrink: 0;
   color: var(--primary-terracotta);
 }
-.hx-info-zalo {
+.hx-info-zalo,
+.hx-info-instagram {
   font-weight: 600;
   color: var(--primary-terracotta);
   transition: transform var(--dur-fast) var(--ease-lux);
 }
-.hx-info-zalo:hover {
+.hx-info-zalo:hover,
+.hx-info-instagram:hover {
   transform: translateY(-2px);
 }
 
@@ -552,7 +554,8 @@
 .hx-footer-list a:hover {
   color: var(--primary-terracotta);
 }
-.hx-footer .hx-footer-zalo {
+.hx-footer .hx-footer-zalo,
+.hx-footer .hx-footer-instagram {
   margin-top: 14px;
   border: none;
   background: var(--primary-terracotta);
@@ -560,7 +563,8 @@
   font-weight: 600;
   box-shadow: 0 4px 14px rgba(116, 59, 37, 0.2);
 }
-.hx-footer .hx-footer-zalo:hover {
+.hx-footer .hx-footer-zalo:hover,
+.hx-footer .hx-footer-instagram:hover {
   background: var(--primary-terracotta-dark);
   box-shadow: 0 8px 22px rgba(116, 59, 37, 0.28);
 }
@@ -624,6 +628,7 @@
   .hx-car-dot,
   .hx-car-dot::before,
   .hx-feature,
-  .hx-info-zalo { transition: none; }
-  .hx-feature:hover, .hx-info-zalo:hover { transform: none; }
+  .hx-info-zalo,
+  .hx-info-instagram { transition: none; }
+  .hx-feature:hover, .hx-info-zalo:hover, .hx-info-instagram:hover { transform: none; }
 }

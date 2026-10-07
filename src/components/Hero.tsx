@@ -4,12 +4,13 @@ import { getStoredServices } from '../data/services';
 import { getMinHints, formatPrice } from '../utils/servicesSummary';
 import type { PriceHint } from '../utils/servicesSummary';
 import { formatDuration } from '../utils/scheduler';
-import { Calendar, Clock, Images, MapPin, MessageCircle, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, Clock, Images, MapPin, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useMode } from '../context/ModeContext';
 import type { ServiceMode } from '../context/ModeContext';
-import { SITE, zaloLink } from '../data/site';
+import { SITE, instagramLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
 import { Squiggle } from './Squiggle';
+import { InstagramIcon } from './ui/InstagramIcon';
 
 interface HeroProps {
   onStartBooking: () => void;
@@ -247,13 +248,13 @@ export const Hero: React.FC<HeroProps> = ({
             </span>
             <Squiggle vertical className="hx-info-sep" />
             <a
-              className="hx-info-item hx-info-zalo"
-              href={zaloLink()}
+              className="hx-info-item hx-info-zalo hx-info-instagram"
+              href={instagramLink()}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <MessageCircle size={16} />
-              Nhắn Zalo
+              <InstagramIcon size={16} />
+              Nhắn Instagram
             </a>
           </div>
         </div>

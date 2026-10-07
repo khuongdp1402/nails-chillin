@@ -1,8 +1,9 @@
 import '../styles/hero.css';
 import React from 'react';
-import { MapPin, Phone, Clock, Sparkles, MessageCircle } from 'lucide-react';
-import { SITE, zaloLink } from '../data/site';
+import { MapPin, Phone, Clock, Sparkles } from 'lucide-react';
+import { SITE, instagramLink } from '../data/site';
 import { useReveal } from '../hooks/useReveal';
+import { InstagramIcon } from './ui/InstagramIcon';
 
 export const Footer: React.FC = () => {
   const ref = useReveal<HTMLDivElement>();
@@ -39,13 +40,13 @@ export const Footer: React.FC = () => {
               </li>
             </ul>
             <a
-              className="btn btn-secondary hx-footer-zalo"
-              href={zaloLink()}
+              className="btn btn-secondary hx-footer-zalo hx-footer-instagram"
+              href={instagramLink()}
               target="_blank"
               rel="noopener noreferrer"
             >
-              <MessageCircle size={16} />
-              <span>Nhắn Zalo cho tiệm</span>
+              <InstagramIcon size={16} />
+              <span>Nhắn Instagram cho tiệm</span>
             </a>
           </div>
 

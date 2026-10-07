@@ -9,11 +9,12 @@ import {
 } from '../../utils/scheduler';
 import { attemptCreateBooking } from '../../utils/storage';
 import { useMode } from '../../context/ModeContext';
-import { zaloLink, SITE } from '../../data/site';
+import { instagramLink, SITE } from '../../data/site';
 import { SALON_HOURS } from '../../data/services';
 import { scrollToTarget } from '../../utils/scroll';
 import confetti from 'canvas-confetti';
 import { CustomDatePicker } from '../ui/CustomDatePicker';
+import { InstagramIcon } from '../ui/InstagramIcon';
 import {
   Calendar,
   Clock,
@@ -26,7 +27,6 @@ import {
   Check,
   Heart,
   Images,
-  MessageCircle,
 } from 'lucide-react';
 
 interface BookingWizardProps {
@@ -436,7 +436,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             {shopNote}
 
             {visibleServices.length === 0 && (
-              <div className="bk-empty">Hiện chưa có dịch vụ nào trong mục này. Bạn nhắn Zalo cho tiệm để được tư vấn nhé.</div>
+              <div className="bk-empty">Hiện chưa có dịch vụ nào trong mục này. Bạn nhắn Instagram cho tiệm để được tư vấn nhé.</div>
             )}
 
             {nailServices.length > 0 && (
@@ -665,7 +665,7 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             </h3>
             <p className="bk-sub bk-done-sub">
               Hẹn gặp {lastCreatedBooking.customerName} lúc {lastCreatedBooking.startTime} ngày{' '}
-              {formatDateVi(lastCreatedBooking.date)}. Bạn bấm nhắn Zalo dưới đây để tiệm giữ chỗ chu đáo cho bạn nhé.
+              {formatDateVi(lastCreatedBooking.date)}. Bạn bấm nhắn Instagram dưới đây để tiệm giữ chỗ chu đáo cho bạn nhé.
             </p>
 
             <div className="bk-receipt">
@@ -693,15 +693,15 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
               </div>
             </div>
 
-            <p className="bk-hint bk-done-hint">Nếu cần đổi giờ, bạn nhắn Zalo cho tiệm sớm giúp mình nhé ♡</p>
+            <p className="bk-hint bk-done-hint">Nếu cần đổi giờ, bạn nhắn Instagram cho tiệm sớm giúp mình nhé ♡</p>
             {shopNote}
             {zaloNotice && (
               <p className="bk-hint" role="status">
                 {zaloNotice.ok ? (
-                  'Đã chép nội dung đặt lịch, bạn dán vào Zalo nhé'
+                  'Đã chép nội dung đặt lịch, bạn dán vào Instagram nhé'
                 ) : (
                   <>
-                    Bạn chép nội dung dưới đây rồi dán vào Zalo nhé:
+                    Bạn chép nội dung dưới đây rồi dán vào Instagram nhé:
                     <br />
                     <span style={{ userSelect: 'all' }}>{zaloNotice.text}</span>
                   </>
@@ -710,14 +710,14 @@ export const BookingWizard: React.FC<BookingWizardProps> = ({
             )}
             <div className="bk-actions">
               <a
-                href={zaloLink()}
+                href={instagramLink()}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="btn bk-zalo"
+                className="btn bk-zalo bk-instagram"
                 onClick={() => handleZaloClick(lastCreatedBooking)}
               >
-                <MessageCircle size={16} />
-                <span>Nhắn Zalo cho tiệm</span>
+                <InstagramIcon size={16} />
+                <span>Nhắn Instagram cho tiệm</span>
               </a>
               <button type="button" className="btn btn-primary" onClick={handleResetForNewBooking}>
                 <span>Đặt thêm lịch</span>

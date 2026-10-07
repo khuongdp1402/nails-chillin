@@ -1,17 +1,20 @@
 import '../styles/chrome.css';
-import { zaloLink } from '../data/site';
+import { instagramLink } from '../data/site';
+import { InstagramIcon } from './ui/InstagramIcon';
 
 export function ZaloFab() {
   return (
     <a
-      className="ch-zalo"
-      href={zaloLink()}
+      className="ch-zalo ch-instagram"
+      href={instagramLink()}
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="Nhắn Zalo cho tiệm"
+      aria-label="Nhắn Instagram cho tiệm"
     >
-      <span className="ch-zalo-tip" role="tooltip">Nhắn Zalo cho tiệm</span>
-      <span className="ch-zalo-btn" aria-hidden="true">Zalo</span>
+      <span className="ch-zalo-tip" role="tooltip">Nhắn Instagram cho tiệm</span>
+      <span className="ch-zalo-btn" aria-hidden="true">
+        <InstagramIcon size={24} strokeWidth={1.8} />
+      </span>
     </a>
   );
 }
